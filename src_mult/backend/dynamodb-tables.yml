@@ -1,0 +1,36 @@
+tables:
+
+  Games:
+    primaryKey: roomId
+    attributes:
+      roomId: string
+      players:
+        type: array
+        items:
+          type: map
+          fields:
+            name: string
+            connectionId: string
+      state:
+        type: map
+        fields:
+          phase: string
+          turn: number
+          board:
+            type: map
+            fields:
+              rescue: number
+              assimilation: number
+          history:
+            type: array
+            items: string
+      host: string
+      createdAt: string
+
+  Connections:
+    primaryKey: connectionId
+    attributes:
+      connectionId: string
+      roomId: string
+      playerName: string
+      joinedAt: string
