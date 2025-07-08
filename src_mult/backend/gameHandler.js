@@ -5,7 +5,7 @@ const { DynamoDBDocumentClient,
     UpdateCommand} = require('@aws-sdk/lib-dynamodb');
 const AWS = require('aws-sdk');
 const { connect } = require('http2');
-const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-1'}));
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
 const apiGateway = new AWS.apiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_ENDPOINT,
 });

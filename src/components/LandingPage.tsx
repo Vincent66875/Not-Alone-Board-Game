@@ -1,4 +1,3 @@
-
 interface LandingPageProps {
   onSelectMode: (mode: 'single' | 'multi') => void;
 }
