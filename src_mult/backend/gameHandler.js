@@ -3,17 +3,16 @@ const { DynamoDBDocumentClient,
     GetCommand, 
     PutCommand, 
     UpdateCommand} = require('@aws-sdk/lib-dynamodb');
-const AWS = require('aws-sdk');
-const { connect } = require('http2');
+const { ApiGatewayManagementApiClient, PostToConnectionCommand } = 
+    require('@aws-sdk/client-apigatewaymanagementapi');
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
-const apiGateway = new AWS.apiGatewayManagementApi({
+const apiGateway = new ApiGatewayManagementApiClient({
     endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
 
 exports.handler = async (event) => {
     const {connectionId} = event.requestContext;
-    const body = JSON.parse(event.body)
-
+    let body;
     try{
         body = JSON.parse(event.body);
     }catch(err){
@@ -24,13 +23,10 @@ exports.handler = async (event) => {
         switch (body.type){
             case 'joinRoom':
                 return await handleJoinRoom(body, connectionId);
-                break;
             case 'playCard':
                 return await handlePlayCard(body, connectionId);
-                break;
             case 'endTurn':
                 return await handleEndTurn(body, connectionId);
-                break;
             default:
                 return {statusCode: 400, body: 'Unknown message type'};
         }
@@ -129,20 +125,21 @@ async function broadcastToRoom(roomId, message){
     }));
 
     const game = gameRes.Item;
-    if(!game || !Array.isArray(game.players)) return;
-
+    if(!game || !Array.isArray(game.players)) {
+        return {statusCode: 404, body: 'Room not found or no players'};
+    }
     const postData = JSON.stringify(message);
 
     await Promise.all(
         game.players.map(async (player) => {
-        try {
-            await apiGateway.postToConnection({
-            ConnectionId: player.connectionId,
-            Data: postData
-            }).promise();
-        } catch (e) {
-            console.warn(`Failed to send to ${player.connectionId}:`, e.message);
-        }
+         try {
+            await apiGateway.send(new PostToConnectionCommand({
+                ConnectionId: player.connectionId,
+                Data: Buffer.from(JSON.stringify(message)),
+            }));
+            } catch (e) {
+                console.warn(`Failed to send to ${player.connectionId}:`, e.message);
+            }
         })
     );
 }
