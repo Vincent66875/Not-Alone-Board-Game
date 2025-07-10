@@ -1,20 +1,33 @@
+export type GamePhase = 'lobby' | 'planning' | 'hunting' | 'resolution' | 'ended';
+
+export interface BoardState {
+  rescue: number; 
+  assimilation: number;
+}
+
 export interface GameState {
-    phase: 'lobby' | 'planning' | 'hunting' | 'resolution';
-    turn: number;
-    board: {
-        rescue: number;
-        assimilation: number;
-    };
-    history: string[];
+  phase: GamePhase;
+  turn: number;
+  board: BoardState;
+  history: string[];
 }
 
 export interface Player {
-    connectionId: string;
-    name: string;
-    hand: number[];
-    discarded: number[];
-    role: 'creature' | 'hunted';
+  connectionId: string;
+  name: string;
+  role?: 'creature' | 'hunted';
+  hand?: number[];
+  discarded?: number[];
 }
+
+export interface Game {
+  roomId: string;
+  players: Player[];
+  state: GameState;
+  host: string;
+  createdAt: string;
+}
+
 
 export function initializeGame(players: Player[]): GameState {
     return {
