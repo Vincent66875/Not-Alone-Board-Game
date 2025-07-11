@@ -24,7 +24,7 @@ jobs:
 
     - name: Bundle with esbuild
       run: |
-        npx esbuild src_mult/backend/gamehandler.js --bundle --platform=node --target=node18 --outfile=gamehandler.js --minify
+        npx esbuild src_mult/backend/gameHandler.js --bundle --platform=node --target=node18 --outfile=gamehandler.js --minify
         npx esbuild src_mult/backend/connect.js --bundle --platform=node --target=node18 --outfile=connect.js --minify
         npx esbuild src_mult/backend/disconnect.js --bundle --platform=node --target=node18 --outfile=disconnect.js --minify
 
