@@ -9,7 +9,7 @@ const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}
 const apiGateway = new ApiGatewayManagementApiClient({
     endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
-
+//Lambda test
 exports.handler = async (event) => {
     const {connectionId} = event.requestContext;
     let body;
