@@ -24,14 +24,18 @@ jobs:
 
     - name: Bundle with esbuild
       run: |
-        npx esbuild src/index.ts \
-          --bundle --platform=node --target=node18 \
-          --outfile=function.js \
-          --minify
+        npx esbuild src/gamehandler.js --bundle --platform=node --target=node18 --outfile=gamehandler.js --minify
+        npx esbuild src/connect.js --bundle --platform=node --target=node18 --outfile=connect.js --minify
+        npx esbuild src/disconnect.js --bundle --platform=node --target=node18 --outfile=disconnect.js --minify
 
-    - name: Zip Lambda function
-      run: |
-        zip function.zip function.js package.json package-lock.json
+    - name: Zip gamehandler
+      run: zip -j gamehandler.zip gamehandler.js
+
+    - name: Zip connect
+      run: zip -j connect.zip connect.js
+
+    - name: Zip disconnect
+      run: zip -j disconnect.zip disconnect.js
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -40,6 +44,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-2
 
-    - name: Deploy to Lambda via CLI
-      run: |
-        aws lambda update-function-code --function-name NotAloneGameHandler --zip-file fileb://function.zip
+    - name: Deploy gamehandler Lambda
+      run: aws lambda update-function-code --function-name NotAloneGameHandler --zip-file fileb://gamehandler.zip
+
+    - name: Deploy connect Lambda
+      run: aws lambda update-function-code --function-name NotAloneConnect --zip-file fileb://connect.zip
+
+    - name: Deploy disconnect Lambda
+      run: aws lambda update-function-code --function-name NotAloneDisconnect --zip-file fileb://disconnect.zip
