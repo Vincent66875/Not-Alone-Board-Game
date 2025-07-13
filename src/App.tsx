@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import LandingPage from './components/LandingPage';
-import SinglePlayerGame from './routes/SinglePlayer';
+import SinglePlayerGame from './components/SinglePlayer';
 import './index.css';
 import './App.css';
+import MultiplayerGame from './mult_frontend/page/MultiplayerGame';
+
 export default function App() {
   const [mode, setMode] = useState<'landing' | 'single' | 'multi'>('landing');
 
@@ -18,12 +20,10 @@ export default function App() {
       />
 
       <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center bg-transparent">
-
+x
         {mode === 'landing' && <LandingPage onSelectMode={setMode} />}
         {mode === 'single' && <SinglePlayerGame />}
-        {mode === 'multi' && (
-          <p className="text-white">Multiplayer mode is coming soon!</p>
-        )}
+        {mode === 'multi' && <MultiplayerGame />}
       </div>
     </>
   );

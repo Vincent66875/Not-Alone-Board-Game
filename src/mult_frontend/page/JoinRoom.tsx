@@ -1,0 +1,54 @@
+import { useState } from 'react';
+
+interface JoinRoomProps {
+  onJoin?: (roomId: string, playerName: string) => void;
+  sendMessage: (msg: any) => void; 
+}
+
+export default function JoinRoom({ onJoin, sendMessage }: JoinRoomProps) {
+  const [roomId, setRoomId] = useState('');
+  const [playerName, setPlayerName] = useState('');
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if(roomId.trim() && playerName.trim()) {
+        sendMessage({type: 'joinRoom', roomId: roomId.trim(), playerName: playerName.trim()})
+        onJoin?.(roomId.trim(), playerName.trim());
+    } else {
+        alert('Please enter both room id and player name');
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-white p-4">
+      <h1 className="text-3xl font-bold mb-6">Join a Room</h1>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
+        <input
+          type="text"
+          placeholder="Room ID"
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value)}
+          className="px-4 py-2 rounded bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Player Name"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          className="px-4 py-2 rounded bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          required
+        />
+
+        <button
+          type="submit"
+          className="bg-indigo-600 hover:bg-indigo-700 rounded py-2 font-semibold transition"
+        >
+          Join Room
+        </button>
+      </form>
+    </div>
+  );
+}

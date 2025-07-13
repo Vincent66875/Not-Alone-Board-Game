@@ -28,14 +28,24 @@ export interface Game {
   createdAt: string;
 }
 
+export function initializeGame(roomId: string, players: Player[]): Game {
+  const initialState: GameState = {
+    phase: 'lobby',
+    turn: 0,
+    board: {
+      rescue: 0,
+      assimilation: 0,
+    },
+    history: [],
+  };
 
-export function initializeGame(players: Player[]): GameState {
-    return {
-        phase: 'planning',
-        turn: 1,
-        board: {rescue: 0, assimilation: 0},
-        history: [],
-    };
+  return {
+    roomId,
+    players,
+    state: initialState,
+    host: players[0]?.connectionId || '',
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export function handlePlayCard(

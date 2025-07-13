@@ -1,5 +1,5 @@
 import { useState } from "react";
-import GameBoard from '../components/GameBoard';
+import GameBoard from './GameBoard';
 
 type Difficulty = 'Easy' | 'Normal' | 'Hard';
 

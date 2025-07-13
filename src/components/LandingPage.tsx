@@ -16,7 +16,7 @@ export default function LandingPage({ onSelectMode }: LandingPageProps) {
         onClick={() => onSelectMode('multi')}
         className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition"
       >
-        Multiplayer (Coming Soon)
+        Multiple player
       </button>
     </div>
   );
