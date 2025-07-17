@@ -24,6 +24,7 @@ export default function JoinRoom({ onJoin, sendMessage }: JoinRoomProps) {
         const newRoomId = crypto.randomUUID().slice(0, 6);
         const name = playerName.trim();
         sendMessage({type: 'joinRoom', roomId: newRoomId, playerName: name});
+        alert("Creating room: " + newRoomId + " by " + name);
         onJoin?.(newRoomId, name);
     } else {
         alert('Please enter a player name before creating a room');

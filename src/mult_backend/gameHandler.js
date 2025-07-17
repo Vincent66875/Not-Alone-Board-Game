@@ -1,5 +1,5 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { getGame, saveGame, addConnection } = require('./game/gameDB');
+const { getGame, saveGame, addConnection, updateConnectionInfo } = require('./game/gameDB');
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
 const { ApiGatewayManagementApiClient, PostToConnectionCommand } = 
     require('@aws-sdk/client-apigatewaymanagementapi');
@@ -41,7 +41,6 @@ async function handleJoinRoom(body, connectionId) {
     if (!roomId || !playerName) {
         return {statusCode: 400, body: 'Missing room id or playerName'};
     }
-
     let game = await getGame(roomId);
 
     if (!game) {
@@ -70,7 +69,7 @@ async function handleJoinRoom(body, connectionId) {
     await saveGame(game);
 
     await addConnection(connectionId, roomId, playerName);
-
+    await updateConnectionInfo(connectionId, roomId, playerName);
     await broadcastToRoom(roomId, {
         type: 'roomUpdate',
         players: game.players.map(p => p.name),

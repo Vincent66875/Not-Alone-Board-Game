@@ -6,7 +6,7 @@ interface MainPageProps {
 }
 
 export default function MainPage({ roomId, playerName, players, onStart }: MainPageProps) {
-  const canStart = players.length >= 1;
+  const canStart = true;
 
   return (
     <div className="bg-black bg-opacity-60 rounded-lg p-6 flex flex-col items-center text-red-300 shadow-lg">

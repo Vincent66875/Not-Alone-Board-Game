@@ -48,3 +48,15 @@ export async function addConnection(connectionId: string, roomId: string, player
     },
   }));
 }
+
+export async function updateConnectionInfo(connectionId: string, roomId: string, playerName: string): Promise<void> {
+  await ddbClient.send(new UpdateCommand({
+    TableName: 'connections',
+    Key: { connectionId },
+    UpdateExpression: 'SET roomId = :roomId, playerName = :playerName',
+    ExpressionAttributeValues: {
+      ':roomId': roomId,
+      ':playerName': playerName,
+    },
+  }));
+}
