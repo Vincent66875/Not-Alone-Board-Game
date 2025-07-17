@@ -1,20 +1,21 @@
+import { 
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+    UpdateCommand,
+    DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
+import {DynamoDBClient} from '@aws-sdk/client-dynamodb';
 import type {Game} from './gameEngine';
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const {
-  DynamoDBDocumentClient,
-  GetCommand,
-  PutCommand,
-  UpdateCommand,
-  DeleteCommand,
-} = require('@aws-sdk/lib-dynamodb');
 
-const ddbClient = new DynamoDBClient({ region: 'us-east-2' });
-const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
-
+const REGION = 'us-east-2';
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-async function getGame(roomId: string): Promise<Game | null>{
+const ddbClient = new DynamoDBClient({region: REGION});
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
+
+export async function getGame(roomId: string): Promise<Game | null>{
     const result = await ddbDocClient.send(new GetCommand({
         TableName: TABLE_GAMES,
         Key: {roomId}
@@ -23,22 +24,21 @@ async function getGame(roomId: string): Promise<Game | null>{
 
 }
 //Save or Update
-async function saveGame(game: Game): Promise<void> {
+export async function saveGame(game: Game): Promise<void> {
     await ddbClient.send( new PutCommand({
         TableName: TABLE_GAMES,
         Item: game,
     }));
 }
 
-async function removeConnection(connectionId: string): Promise<void> {
+export async function removeConnection(connectionId: string): Promise<void> {
     await ddbClient.send(new DeleteCommand({
         TableName: TABLE_CONNECTIONS,
         Key: { connectionId },
     }));
 }
 
-async function addConnection(connectionId: string, roomId: string, playerName: string): Promise<void> {
-  console.log("addConnection called with", connectionId, roomId, playerName); // <-- Add this
+export async function addConnection(connectionId: string, roomId: string, playerName: string): Promise<void> {
   await ddbDocClient.send(new PutCommand({
     TableName: TABLE_CONNECTIONS,
     Item: {
@@ -50,8 +50,7 @@ async function addConnection(connectionId: string, roomId: string, playerName: s
   }));
 }
 
-
-async function updateConnectionInfo(connectionId: string, roomId: string, playerName: string): Promise<void> {
+export async function updateConnectionInfo(connectionId: string, roomId: string, playerName: string): Promise<void> {
   await ddbClient.send(new UpdateCommand({
     TableName: 'connections',
     Key: { connectionId },
@@ -62,11 +61,3 @@ async function updateConnectionInfo(connectionId: string, roomId: string, player
     },
   }));
 }
-
-module.exports = {
-  getGame,
-  saveGame,
-  removeConnection,
-  addConnection,
-  updateConnectionInfo,
-};
