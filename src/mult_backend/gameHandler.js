@@ -7,7 +7,7 @@ const { ApiGatewayManagementApiClient, PostToConnectionCommand } =
 const apiGateway = new ApiGatewayManagementApiClient({
     endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
-
+//Lambda testing
 exports.handler = async (event) => {
     const {connectionId} = event.requestContext;
     let body;
