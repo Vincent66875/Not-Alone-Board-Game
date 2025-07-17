@@ -1,5 +1,5 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { getGame, saveGame, addConnection } = require('./gameDB');
+const { getGame, saveGame, addConnection } = require('./game/gameDB');
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
 const { ApiGatewayManagementApiClient, PostToConnectionCommand } = 
     require('@aws-sdk/client-apigatewaymanagementapi');

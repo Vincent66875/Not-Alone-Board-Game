@@ -1,4 +1,4 @@
-const { removeConnection } = require('./gameDB');
+const { removeConnection } = require('./game/gameDB');
 
 exports.handler = async (event) => {
   const { connectionId } = event.requestContext;

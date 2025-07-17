@@ -1,4 +1,4 @@
-const { addConnection } = require('./gameDB');
+const { addConnection } = require('./game/gameDB');
 
 
 exports.handler = async (event) => {
