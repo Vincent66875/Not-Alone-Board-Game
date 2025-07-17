@@ -1,4 +1,5 @@
-const { addConnection } = require('./gameDB'); // adjust path if needed
+const { addConnection } = require('./gameDB');
+
 
 exports.handler = async (event) => {
   const connectionId = event.requestContext.connectionId;
