@@ -19,9 +19,20 @@ export default function JoinRoom({ onJoin, sendMessage }: JoinRoomProps) {
     }
   }
 
+  function handleCreate() {
+    if(playerName.trim()) {
+        const newRoomId = crypto.randomUUID().slice(0, 6);
+        const name = playerName.trim();
+        sendMessage({type: 'joinRoom', roomId: newRoomId, playerName: name});
+        onJoin?.(newRoomId, name);
+    } else {
+        alert('Please enter a player name before creating a room');
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-white p-4">
-      <h1 className="text-3xl font-bold mb-6">Join a Room</h1>
+      <h1 className="text-3xl font-bold text-blue-950 mb-6">Join a Room</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
         <input
@@ -47,6 +58,14 @@ export default function JoinRoom({ onJoin, sendMessage }: JoinRoomProps) {
           className="bg-indigo-600 hover:bg-indigo-700 rounded py-2 font-semibold transition"
         >
           Join Room
+        </button>
+
+        <button
+          type="button"
+          onClick={handleCreate}
+          className='bg-green-600 hover:bg-green-700 rounded py-2 font-semibold transition'
+        >
+            Create Room
         </button>
       </form>
     </div>

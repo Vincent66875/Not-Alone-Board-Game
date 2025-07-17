@@ -81,7 +81,7 @@ async function handleJoinRoom(body, connectionId) {
     await broadcastToRoom(roomId, {
         type: 'roomUpdate',
         players: game.players.map(p => p.name),
-        readyToStart: game.players.length >= 3,
+        readyToStart: game.players.length >= 1,
     });
 
     return {statusCode: 200};
@@ -126,9 +126,9 @@ async function handleStartGame(body, connectionId) {
     }
 
     const game = await getGame(roomId);
-    if (!game || game.players.length < 3) {
-        return {statusCode: 400, body: "Not enough players to start the game"};
-    }
+    // if (!game || game.players.length < 1) {
+    //     return {statusCode: 400, body: "Not enough players to start the game"};
+    // }
 
     game.state.phase = 'main';
 
