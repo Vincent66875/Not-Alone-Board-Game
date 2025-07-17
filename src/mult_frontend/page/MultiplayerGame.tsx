@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import JoinRoom from './JoinRoom';
 import { useWebSocket } from '../hooks/useWebsocket';
 import type { Message } from '../hooks/useWebsocket';
@@ -8,16 +8,17 @@ export default function MultiplayerApp() {
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [phase, setPhase] = useState<'join' | 'lobby' | 'game'>('join');
 
-  const { sendMessage, messages, connected } = useWebSocket('wss://your-api-id.execute-api.us-east-2.amazonaws.com/production');
+  const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
 
   function handleJoin(roomId: string, playerName: string) {
     setRoomId(roomId);
     setPlayerName(playerName);
     setPhase('lobby');
-    // sendMessage already called in JoinRoom
   }
+  useEffect(() => {
+    const playerhands = [];
 
-  // You can add useEffect here to listen for incoming messages and transition to game phase
+  })
 
   return (
     <>
