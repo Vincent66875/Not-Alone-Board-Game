@@ -38,6 +38,7 @@ async function removeConnection(connectionId: string): Promise<void> {
 }
 
 async function addConnection(connectionId: string, roomId: string, playerName: string): Promise<void> {
+  console.log("addConnection called with", connectionId, roomId, playerName); // <-- Add this
   await ddbDocClient.send(new PutCommand({
     TableName: TABLE_CONNECTIONS,
     Item: {
@@ -48,6 +49,7 @@ async function addConnection(connectionId: string, roomId: string, playerName: s
     },
   }));
 }
+
 
 async function updateConnectionInfo(connectionId: string, roomId: string, playerName: string): Promise<void> {
   await ddbClient.send(new UpdateCommand({
