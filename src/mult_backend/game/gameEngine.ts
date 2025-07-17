@@ -3,6 +3,7 @@ export type GamePhase = 'lobby' | 'planning' | 'hunting' | 'resolution' | 'ended
 export interface BoardState {
   rescue: number; 
   assimilation: number;
+  beachMarker: boolean;
 }
 
 export interface GameState {
@@ -35,6 +36,7 @@ export function initializeGame(roomId: string, players: Player[]): Game {
     board: {
       rescue: 0,
       assimilation: 0,
+      beachMarker: false,
     },
     history: [],
   };

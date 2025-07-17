@@ -1,98 +1,99 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient,
-    GetCommand, 
-    PutCommand, 
-    UpdateCommand} = require('@aws-sdk/lib-dynamodb');
+import { getGame, saveGame, addConnection } from './gameDB';
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
 const { ApiGatewayManagementApiClient, PostToConnectionCommand } = 
     require('@aws-sdk/client-apigatewaymanagementapi');
-const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
+
+const {
+  getGame,
+  saveGame,
+  addConnection,
+  // removeConnection, updateGame etc if you have those
+} = require('./gameDB');
+
 const apiGateway = new ApiGatewayManagementApiClient({
     endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
-//Lambda test
+
 exports.handler = async (event) => {
     const {connectionId} = event.requestContext;
     let body;
-    try{
+    try {
         body = JSON.parse(event.body);
-    }catch(err){
+    } catch(err) {
         return {statusCode: 400, body: 'Invalid JSON'};
     }
 
-    try{
-        switch (body.type){
+    try {
+        switch (body.type) {
             case 'joinRoom':
                 return await handleJoinRoom(body, connectionId);
             case 'playCard':
                 return await handlePlayCard(body, connectionId);
             case 'endTurn':
                 return await handleEndTurn(body, connectionId);
+            case 'startGame': 
+                return await handleStartGame(body, connectionId);
             default:
                 return {statusCode: 400, body: 'Unknown message type'};
         }
     } catch(err) {
         console.error("Error handling message: ", err);
         return {statusCode: 500, body: "Internal server error"};
-    };
+    }
 };
 
 async function handleJoinRoom(body, connectionId) {
     const {roomId, playerName} = body;
-    if(!roomId || !playerName) {
+    if (!roomId || !playerName) {
         return {statusCode: 400, body: 'Missing room id or playerName'};
     }
-    const gameRes = await ddb.send(new GetCommand({
-        TableName: 'games',
-        Key: {roomId},
-    }));
 
-    const game = gameRes.Item || {
-        roomId,
-        players: [],
-        state: {
-            phase: 'lobby',
-            turn: 0,
-            board: {
-                rescue: 0,
-                assimilation: 0,
+    let game = await getGame(roomId);
+
+    if (!game) {
+        game = {
+            roomId,
+            players: [],
+            state: {
+                phase: 'lobby',
+                turn: 0,
+                board: {
+                    rescue: 0,
+                    assimilation: 0,
+                },
+                history: [],
             },
-            history: [],
-        },
-        host: connectionId,
-        createdAt: new Date().toISOString(),
-    };
-    const alreadyjoined = game.players.some(p => p.connectionId === connectionId);
-    if (!alreadyjoined) {
+            host: connectionId,
+            createdAt: new Date().toISOString(),
+        };
+    }
+
+    const alreadyJoined = game.players.some(p => p.connectionId === connectionId);
+    if (!alreadyJoined) {
         game.players.push({connectionId, name: playerName});
     }
-    
-    await ddb.send(new PutCommand({
-        TableName: 'games',
-        Item: game
-    }));
-    await ddb.send(new PutCommand({
-        TableName: 'connections',
-        Item: {
-            connectionId,
-            roomId,
-            playerName,
-            joinedAt: new Date().toISOString(),
-        }
-    }));
+
+    await saveGame(game);
+
+    await addConnection(connectionId, roomId, playerName);
+
     await broadcastToRoom(roomId, {
         type: 'roomUpdate',
-        players: game.players.map(p => p.name)
+        players: game.players.map(p => p.name),
+        readyToStart: game.players.length >= 3,
     });
 
     return {statusCode: 200};
 }
 
-async function handlePlayCard(body, connectionId){
+async function handlePlayCard(body, connectionId) {
     const {roomId, cardId} = body;
-    if(!roomId || !cardId){
+    if (!roomId || !cardId) {
         return {statusCode: 400, body: 'Missing room id or cardId'};
     }
-    //add valudation + update state
+    // TODO: Add validation + update game state using gameDB helpers if needed
+
     await broadcastToRoom(roomId, {
         type: 'cardPlayed',
         connectionId,
@@ -103,40 +104,58 @@ async function handlePlayCard(body, connectionId){
 }
 
 async function handleEndTurn(body, connectionId) {
-  const { roomId } = body;
-  if (!roomId) {
-    return { statusCode: 400, body: 'Missing roomId' };
-  }
+    const { roomId } = body;
+    if (!roomId) {
+        return { statusCode: 400, body: 'Missing roomId' };
+    }
 
-  // Later: Track which players have ended their turn and progress the round
+    // TODO: Track ended turns and advance round if needed
 
-  await broadcastToRoom(roomId, {
-    type: 'playerEndedTurn',
-    connectionId
-  });
+    await broadcastToRoom(roomId, {
+        type: 'playerEndedTurn',
+        connectionId,
+    });
 
-  return { statusCode: 200 };
+    return { statusCode: 200 };
 }
 
-async function broadcastToRoom(roomId, message){
-    const gameRes = await ddb.send(new GetCommand({
-        TableName: 'games',
-        Key: {roomId}
-    }));
+async function handleStartGame(body, connectionId) {
+    const { roomId } = body;
+    if (!roomId) {
+        return {statusCode: 400, body: 'Missing roomId'};
+    }
 
-    const game = gameRes.Item;
-    if(!game || !Array.isArray(game.players)) {
+    const game = await getGame(roomId);
+    if (!game || game.players.length < 3) {
+        return {statusCode: 400, body: "Not enough players to start the game"};
+    }
+
+    game.state.phase = 'main';
+
+    await saveGame(game);
+
+    await broadcastToRoom(roomId, {
+        type: 'gameStart',
+        state: game.state,
+    });
+
+    return {statusCode: 200};
+}
+
+async function broadcastToRoom(roomId, message) {
+    const game = await getGame(roomId);
+
+    if (!game || !Array.isArray(game.players)) {
         return {statusCode: 404, body: 'Room not found or no players'};
     }
-    const postData = JSON.stringify(message);
 
     await Promise.all(
         game.players.map(async (player) => {
-         try {
-            await apiGateway.send(new PostToConnectionCommand({
-                ConnectionId: player.connectionId,
-                Data: Buffer.from(JSON.stringify(message)),
-            }));
+            try {
+                await apiGateway.send(new PostToConnectionCommand({
+                    ConnectionId: player.connectionId,
+                    Data: Buffer.from(JSON.stringify(message)),
+                }));
             } catch (e) {
                 console.warn(`Failed to send to ${player.connectionId}:`, e.message);
             }

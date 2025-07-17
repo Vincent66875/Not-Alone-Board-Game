@@ -1,15 +1,9 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
-const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-2' }));
+const { removeConnection } = require('./gameDB');
 
 exports.handler = async (event) => {
   const { connectionId } = event.requestContext;
-
   try {
-    await ddb.send(new DeleteCommand({
-      TableName: 'connections',
-      Key: { connectionId }
-    }));
+    await removeConnection(connectionId);
     console.log(`Deleted connection ${connectionId}`);
     return { statusCode: 200 };
   } catch (err) {
