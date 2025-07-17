@@ -1,26 +1,26 @@
-import { 
-    DynamoDBDocumentClient,
-    GetCommand,
-    PutCommand,
-    UpdateCommand,
-    DeleteCommand,
-} from "@aws-sdk/lib-dynamodb";
-import {DynamoDBClient} from '@aws-sdk/client-dynamodb';
 import type {Game} from './gameEngine';
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+  DeleteCommand,
+} = require('@aws-sdk/lib-dynamodb');
 
-const REGION = 'us-east-2';
+const ddbClient = new DynamoDBClient({ region: 'us-east-2' });
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
+
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
-
-const ddbClient = new DynamoDBClient({region: REGION});
-const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
 export async function getGame(roomId: string): Promise<Game | null>{
     const result = await ddbDocClient.send(new GetCommand({
         TableName: TABLE_GAMES,
         Key: {roomId}
     }));
-    return result.Item as Game || null;
+    return (result.Item as Game) || null;
+
 }
 //Save or Update
 export async function saveGame(game: Game): Promise<void> {

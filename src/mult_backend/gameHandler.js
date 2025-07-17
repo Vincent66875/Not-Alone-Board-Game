@@ -70,6 +70,7 @@ async function handleJoinRoom(body, connectionId) {
 
     await addConnection(connectionId, roomId, playerName);
     await updateConnectionInfo(connectionId, roomId, playerName);
+    
     await broadcastToRoom(roomId, {
         type: 'roomUpdate',
         players: game.players.map(p => p.name),
