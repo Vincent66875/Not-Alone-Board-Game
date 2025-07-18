@@ -3,9 +3,10 @@ interface MainPageProps {
   playerName: string;
   players: string[];
   onStart: () => void;
+  onLeave: () => void;
 }
 
-export default function MainPage({ roomId, playerName, players, onStart }: MainPageProps) {
+export default function MainPage({ roomId, playerName, players, onStart, onLeave }: MainPageProps) {
   const canStart = true;
 
   return (
@@ -19,17 +20,25 @@ export default function MainPage({ roomId, playerName, players, onStart }: MainP
           <li key={idx} className="text-lg">• {name}</li>
           ))}
       </ul>
-      
-      {canStart ? (
+      <div className="flex gap-4">
+        <button
+          onClick={onLeave}
+          className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold"
+        >
+          Leave Room
+        </button>
+
+        {canStart ? (
           <button
-          onClick={onStart}
-          className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold"
+            onClick={onStart}
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold"
           >
-          Start Game
+            Start Game
           </button>
-      ) : (
-          <p className="text-gray-300">Waiting for at least 3 players to join...</p>
-      )}
+        ) : (
+          <p className="text-gray-300 mt-2">Waiting for at least 3 players to join...</p>
+        )}
+      </div>
     </div>
 
   );

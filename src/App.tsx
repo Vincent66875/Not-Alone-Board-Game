@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import LandingPage from './components/LandingPage';
-import SinglePlayerGame from './components/SinglePlayer';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import './App.css';
 import MultiplayerGame from './mult_frontend/page/MultiplayerGame';
+import LandingPage from './components/LandingPage';
+import SinglePlayerGame from './components/SinglePlayer';
 
 export default function App() {
   const [mode, setMode] = useState<'landing' | 'single' | 'multi'>('landing');
@@ -19,12 +20,15 @@ export default function App() {
         src="/background/galaxy.mp4"
       />
 
-      <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center bg-transparent">
-x
-        {mode === 'landing' && <LandingPage onSelectMode={setMode} />}
-        {mode === 'single' && <SinglePlayerGame />}
-        {mode === 'multi' && <MultiplayerGame />}
-      </div>
+      <Router>
+        <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center bg-transparent">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/single" element={<SinglePlayerGame />} />
+            <Route path="/multi" element={<MultiplayerGame />} />
+          </Routes>
+        </div>
+      </Router>
     </>
   );
 }

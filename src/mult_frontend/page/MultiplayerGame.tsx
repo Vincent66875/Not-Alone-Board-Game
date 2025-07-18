@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import JoinRoom from './JoinRoom';
 import MainPage from './MainPage';
 import { useWebSocket } from '../hooks/useWebsocket';
@@ -20,6 +21,9 @@ export default function MultiplayerApp() {
   function handleStartGame() {
     sendMessage({"type": 'startGame', roomId});
     setStage('game');
+  }
+  function handleLeaveGame() {
+    sendMessage({ type: 'leaveRoom' });
   }
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
@@ -47,6 +51,7 @@ export default function MultiplayerApp() {
           playerName={playerName}
           players={players}
           onStart={handleStartGame}
+          onLeave={handleLeaveGame}
         />
       )}
 
