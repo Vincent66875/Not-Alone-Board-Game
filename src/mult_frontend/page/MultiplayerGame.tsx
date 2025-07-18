@@ -23,7 +23,12 @@ export default function MultiplayerApp() {
     setStage('game');
   }
   function handleLeaveGame() {
-    sendMessage({ type: 'leaveRoom' });
+    sendMessage({ type: 'leaveRoom', roomId, playerName });
+    // Reset all game state
+    setRoomId(null);
+    setPlayerName(null);
+    setPlayers([]);
+    setStage('join');
   }
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
