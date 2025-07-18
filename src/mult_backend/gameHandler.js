@@ -1,5 +1,5 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const { ApiGatewayManagementApiClient, PostToConnectionCommand } = require('@aws-sdk/client-apigatewaymanagementapi');
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-2' }));
@@ -27,6 +27,8 @@ exports.handler = async (event) => {
                 return await handleEndTurn(body, connectionId);
             case 'startGame':
                 return await handleStartGame(body, connectionId);
+            case 'leaveRoom':
+                return await handleLeaveGame(body, connectionId);
             default:
                 return { statusCode: 400, body: 'Unknown message type' };
         }
@@ -129,6 +131,31 @@ async function handleStartGame(body, connectionId) {
     return { statusCode: 200 };
 }
 
+async function handleLeaveGame(body, connectionId) {
+    const { roomId } = body;
+    if (!roomId) {
+        return { statusCode: 400, body: 'Missing roomId' };
+    }
+
+    const game = await getGame(roomId);
+    if (!game) {
+        return { statusCode: 404, body: 'Game not found' };
+    }
+    if(game.players.length === 0){
+        await deleteGame(roomId);
+    }else{
+        await saveGame(game);
+        await broadcastToRoom(roomId, {
+            type: 'roomUpdate',
+            players: game.players.map(p=>p.name),
+            readyToStart: game.players.length>=1,
+        }); 
+    }
+    await removeConnection(connectionId);
+
+    return { statusCode: 200 };
+}
+
 async function broadcastToRoom(roomId, message) {
     const game = await getGame(roomId);
     if (!game || !Array.isArray(game.players)) {
@@ -164,6 +191,13 @@ async function saveGame(game) {
     }));
 }
 
+async function deleteGame(game) {
+    await ddb.send(new DeleteCommand({
+        TableName: TABLE_GAMES,
+        Key: roomId
+    }));
+}
+
 async function addConnection(connectionId, roomId, playerName) {
     await ddb.send(new PutCommand({
         TableName: TABLE_CONNECTIONS,
@@ -173,5 +207,11 @@ async function addConnection(connectionId, roomId, playerName) {
             playerName,
             updatedAt: new Date().toISOString()
         }
+    }));
+}
+async function removeConnection(connectionId, roomId, playerName) {
+    await ddb.send(new DeleteCommand({
+        TableName: TABLE_CONNECTIONS,
+        Key: roomId,
     }));
 }

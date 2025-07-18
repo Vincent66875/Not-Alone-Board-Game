@@ -33,7 +33,7 @@ exports.handler = async (event) => {
 
 
     await ddbDocClient.send(new DeleteCommand({
-      TableName: CONNECTIONS_TABLE,
+      TableName: TABLE_CONNECTIONS,
       Key: { connectionId },
     }));
     //2
