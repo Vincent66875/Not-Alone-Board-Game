@@ -1,20 +1,20 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { getGame, saveGame, addConnection, updateConnectionInfo } = require('./game/gameDB');
-const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({region: 'us-east-2'}));
-const { ApiGatewayManagementApiClient, PostToConnectionCommand } = 
-    require('@aws-sdk/client-apigatewaymanagementapi');
+const { DynamoDBDocumentClient, GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
+const { ApiGatewayManagementApiClient, PostToConnectionCommand } = require('@aws-sdk/client-apigatewaymanagementapi');
 
-const apiGateway = new ApiGatewayManagementApiClient({
-    endpoint: process.env.WEBSOCKET_ENDPOINT,
-});
-//Lambda testing
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-2' }));
+const apiGateway = new ApiGatewayManagementApiClient({ endpoint: process.env.WEBSOCKET_ENDPOINT });
+
+const TABLE_GAMES = 'games';
+const TABLE_CONNECTIONS = 'connections';
+
 exports.handler = async (event) => {
-    const {connectionId} = event.requestContext;
+    const { connectionId } = event.requestContext;
     let body;
     try {
         body = JSON.parse(event.body);
-    } catch(err) {
-        return {statusCode: 400, body: 'Invalid JSON'};
+    } catch (err) {
+        return { statusCode: 400, body: 'Invalid JSON' };
     }
 
     try {
@@ -25,24 +25,24 @@ exports.handler = async (event) => {
                 return await handlePlayCard(body, connectionId);
             case 'endTurn':
                 return await handleEndTurn(body, connectionId);
-            case 'startGame': 
+            case 'startGame':
                 return await handleStartGame(body, connectionId);
             default:
-                return {statusCode: 400, body: 'Unknown message type'};
+                return { statusCode: 400, body: 'Unknown message type' };
         }
-    } catch(err) {
-        console.error("Error handling message: ", err);
-        return {statusCode: 500, body: "Internal server error"};
+    } catch (err) {
+        console.error("Error handling message:", err);
+        return { statusCode: 500, body: "Internal server error" };
     }
 };
 
 async function handleJoinRoom(body, connectionId) {
-    const {roomId, playerName} = body;
+    const { roomId, playerName } = body;
     if (!roomId || !playerName) {
-        return {statusCode: 400, body: 'Missing room id or playerName'};
+        return { statusCode: 400, body: 'Missing roomId or playerName' };
     }
-    let game = await getGame(roomId);
 
+    let game = await getGame(roomId);
     if (!game) {
         game = {
             roomId,
@@ -63,29 +63,26 @@ async function handleJoinRoom(body, connectionId) {
 
     const alreadyJoined = game.players.some(p => p.connectionId === connectionId);
     if (!alreadyJoined) {
-        game.players.push({connectionId, name: playerName});
+        game.players.push({ connectionId, name: playerName });
     }
 
     await saveGame(game);
-
     await addConnection(connectionId, roomId, playerName);
-    await updateConnectionInfo(connectionId, roomId, playerName);
-    
+
     await broadcastToRoom(roomId, {
         type: 'roomUpdate',
         players: game.players.map(p => p.name),
         readyToStart: game.players.length >= 1,
     });
 
-    return {statusCode: 200};
+    return { statusCode: 200 };
 }
 
 async function handlePlayCard(body, connectionId) {
-    const {roomId, cardId} = body;
+    const { roomId, cardId } = body;
     if (!roomId || !cardId) {
-        return {statusCode: 400, body: 'Missing room id or cardId'};
+        return { statusCode: 400, body: 'Missing roomId or cardId' };
     }
-    // TODO: Add validation + update game state using gameDB helpers if needed
 
     await broadcastToRoom(roomId, {
         type: 'cardPlayed',
@@ -93,7 +90,7 @@ async function handlePlayCard(body, connectionId) {
         cardId,
     });
 
-    return {statusCode: 200};
+    return { statusCode: 200 };
 }
 
 async function handleEndTurn(body, connectionId) {
@@ -101,8 +98,6 @@ async function handleEndTurn(body, connectionId) {
     if (!roomId) {
         return { statusCode: 400, body: 'Missing roomId' };
     }
-
-    // TODO: Track ended turns and advance round if needed
 
     await broadcastToRoom(roomId, {
         type: 'playerEndedTurn',
@@ -115,16 +110,15 @@ async function handleEndTurn(body, connectionId) {
 async function handleStartGame(body, connectionId) {
     const { roomId } = body;
     if (!roomId) {
-        return {statusCode: 400, body: 'Missing roomId'};
+        return { statusCode: 400, body: 'Missing roomId' };
     }
 
     const game = await getGame(roomId);
-    // if (!game || game.players.length < 1) {
-    //     return {statusCode: 400, body: "Not enough players to start the game"};
-    // }
+    if (!game) {
+        return { statusCode: 404, body: 'Game not found' };
+    }
 
     game.state.phase = 'main';
-
     await saveGame(game);
 
     await broadcastToRoom(roomId, {
@@ -132,14 +126,13 @@ async function handleStartGame(body, connectionId) {
         state: game.state,
     });
 
-    return {statusCode: 200};
+    return { statusCode: 200 };
 }
 
 async function broadcastToRoom(roomId, message) {
     const game = await getGame(roomId);
-
     if (!game || !Array.isArray(game.players)) {
-        return {statusCode: 404, body: 'Room not found or no players'};
+        return { statusCode: 404, body: 'Room not found or no players' };
     }
 
     await Promise.all(
@@ -154,4 +147,31 @@ async function broadcastToRoom(roomId, message) {
             }
         })
     );
+}
+
+async function getGame(roomId) {
+    const result = await ddb.send(new GetCommand({
+        TableName: TABLE_GAMES,
+        Key: { roomId }
+    }));
+    return result.Item || null;
+}
+
+async function saveGame(game) {
+    await ddb.send(new PutCommand({
+        TableName: TABLE_GAMES,
+        Item: game
+    }));
+}
+
+async function addConnection(connectionId, roomId, playerName) {
+    await ddb.send(new PutCommand({
+        TableName: TABLE_CONNECTIONS,
+        Item: {
+            connectionId,
+            roomId,
+            playerName,
+            updatedAt: new Date().toISOString()
+        }
+    }));
 }

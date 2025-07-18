@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import JoinRoom from './JoinRoom';
-import MainPage from './mainPage';
+import MainPage from './MainPage';
 import { useWebSocket } from '../hooks/useWebsocket';
 import type { Message } from '../hooks/useWebsocket';
 

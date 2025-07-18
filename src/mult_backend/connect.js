@@ -1,13 +1,31 @@
-const { getConnection, addConnection } = require('./game/gameDB');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
+
+const client = new DynamoDBClient({ region: 'us-east-2' });
+const ddb = DynamoDBDocumentClient.from(client);
+
+const CONNECTIONS_TABLE = 'connections';
 
 exports.handler = async (event) => {
   const connectionId = event.requestContext.connectionId;
 
   try {
-    // Check if connection already exists to avoid overwriting
-    const existing = await getConnection(connectionId);
-    if (!existing) {
-      await addConnection(connectionId, '', '');
+    // Check if connection already exists
+    const getResp = await ddb.send(new GetCommand({
+      TableName: CONNECTIONS_TABLE,
+      Key: { connectionId },
+    }));
+
+    if (!getResp.Item) {
+      await ddb.send(new PutCommand({
+        TableName: CONNECTIONS_TABLE,
+        Item: {
+          connectionId,
+          roomId: '',
+          playerName: '',
+          connectedAt: new Date().toISOString(),
+        },
+      }));
     }
 
     return { statusCode: 200, body: 'Connected' };
