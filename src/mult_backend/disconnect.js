@@ -1,24 +1,77 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+const {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+  DeleteCommand,
+  QueryCommand,
+} = require('@aws-sdk/lib-dynamodb');
 
-const client = new DynamoDBClient({ region: 'us-east-2' });
-const ddb = DynamoDBDocumentClient.from(client);
+const REGION = 'us-east-2';
+const TABLE_GAMES = 'games';
+const TABLE_CONNECTIONS = 'connections';
 
-const CONNECTIONS_TABLE = 'connections';
+const ddbClient = new DynamoDBClient({ region: REGION });
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
 exports.handler = async (event) => {
   const { connectionId } = event.requestContext;
 
   try {
-    await ddb.send(new DeleteCommand({
+    const connectionInfo = await ddbDocClient.send(new GetCommand({
+      TableName: TABLE_CONNECTIONS,
+      Key: { connectionId }
+    }));
+    //1
+    if(!connectionInfo.Item) {
+      console.log(`Connection ${connectionId} not found in connection table`);
+      return {statusCode: 200, body: "Connection not found"}
+    }
+
+    const {roomId} = connectionInfo.Item;
+
+
+    await ddbDocClient.send(new DeleteCommand({
       TableName: CONNECTIONS_TABLE,
       Key: { connectionId },
     }));
+    //2
+    if(!roomId){
+      return {statusCode: 200, body: 'Disconnected without room'};
+    }
+
+    const gameResult = await ddbDocClient.send(new GetCommand({
+      TableName: TABLE_GAMES,
+      Key: {roomId}
+    }));
+    //3
+    if(!gameResult.Item){
+      console.log(`Game with roomId {roomId} not found`);
+      return {statusCode: 200, body: 'Game room not found'};
+    }
+    
+    const game = gameResult.Item;
+
+    game.players = game.players.filter(player => player.connectionId != connectionId);
+
+    if(game.players.length === 0){
+      await ddbDocClient.send(new DeleteCommand({
+        TableName: TABLE_GAMES,
+        Key: roomId
+      }));
+      console.log(`Deleted game ${roomId} because no players left`);
+    }else{
+      await ddbDocClient.send(new PutCommand({
+        TableName: TABLE_GAMES,
+        Item: game
+      }));
+    }
 
     console.log(`Deleted connection ${connectionId}`);
-    return { statusCode: 200 };
+    return { statusCode: 200, body: 'Disconnected and cleaned up'};
   } catch (err) {
     console.error('Error deleting connection:', err);
-    return { statusCode: 500, body: 'Failed to delete connection' };
+    return { statusCode: 500, body: 'Failed to delete connection cleanly' };
   }
 };
