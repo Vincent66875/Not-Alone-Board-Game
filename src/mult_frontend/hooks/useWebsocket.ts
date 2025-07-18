@@ -11,18 +11,18 @@ export function useWebSocket(url: string) {
     useEffect(()=>{
         ws.current = new WebSocket(url);
         ws.current.onopen = () => {
-        console.log('WebSocket connected');
-        setConnected(true);
+            console.log('WebSocket connected');
+            setConnected(true);
         };
 
         ws.current.onclose = () => {
-        console.log('WebSocket disconnected');
-        setConnected(false);
+            console.log('WebSocket disconnected');
+            setConnected(false);
         };
 
         ws.current.onerror = (err) => {
-        console.error('WebSocket error', err);
-        setConnected(false);
+            console.error('WebSocket error', err);
+            setConnected(false);
         };
 
         ws.current.onmessage = (event) => {
@@ -34,8 +34,15 @@ export function useWebSocket(url: string) {
         }
         };
 
+        const handleUnload = () => {
+            ws.current?.close();
+        };
+        window.addEventListener('beforeunload', handleUnload);
+        window.addEventListener('unload', handleUnload);
         return () => {
             ws.current?.close();
+            window.removeEventListener('beforeunload', handleUnload);
+            window.removeEventListener('unload', handleUnload);
         };
     }, [url]);
     
