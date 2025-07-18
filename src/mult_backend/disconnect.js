@@ -58,7 +58,7 @@ exports.handler = async (event) => {
     if(game.players.length === 0){
       await ddbDocClient.send(new DeleteCommand({
         TableName: TABLE_GAMES,
-        Key: roomId
+        Key: {roomId}
       }));
       console.log(`Deleted game ${roomId} because no players left`);
     }else{
