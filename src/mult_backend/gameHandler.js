@@ -125,35 +125,64 @@ async function handleEndTurn(body, connectionId) {
 
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
-  await broadcastToRoom(roomId, {
-    type: 'Test broadCast',
-    stage: 'join',
-  });
+
+  await debugBroadcast(roomId, 'handleStartGame triggered');
+
   if (!roomId) {
+    await debugBroadcast(roomId, 'Missing roomId');
     return { statusCode: 400, body: 'Missing roomId' };
   }
 
-  const game = await getGame(roomId);
+  let game;
+  try {
+    game = await getGame(roomId);
+    await debugBroadcast(roomId, 'Fetched game: ' + JSON.stringify(game));
+  } catch (err) {
+    await debugBroadcast(roomId, 'Error fetching game: ' + err.message);
+    return { statusCode: 500, body: 'DB error' };
+  }
+
   if (!game) {
+    await debugBroadcast(roomId, 'Game not found');
     return { statusCode: 404, body: 'Game not found' };
   }
 
+  let updatedGame;
+  try {
+    updatedGame = startGame(game);
+    await debugBroadcast(roomId, 'Game after startGame: ' + JSON.stringify(updatedGame));
+  } catch (err) {
+    await debugBroadcast(roomId, 'Error in startGame: ' + err.message);
+    return { statusCode: 500, body: 'startGame failed' };
+  }
 
-  const updatedGame = startGame(game);
-  await saveGame(updatedGame);
+  try {
+    await saveGame(updatedGame);
+    await debugBroadcast(roomId, 'Game saved');
+  } catch (err) {
+    await debugBroadcast(roomId, 'Error saving game: ' + err.message);
+    return { statusCode: 500, body: 'Save failed' };
+  }
 
-  await broadcastToRoom(roomId, {
-    type: 'stageUpdate',
-    stage: 'game',
-  });
+  try {
+    await broadcastToRoom(roomId, {
+      type: 'stageUpdate',
+      stage: 'game',
+    });
+    await debugBroadcast(roomId, 'Broadcasted stageUpdate');
 
-  await broadcastToRoom(roomId, {
-    type: 'gameUpdate',
-    gameState: game.state,
-  });
+    await broadcastToRoom(roomId, {
+      type: 'gameUpdate',
+      gameState: updatedGame.state,
+    });
+    await debugBroadcast(roomId, 'Broadcasted gameUpdate');
+  } catch (err) {
+    await debugBroadcast(roomId, 'Broadcast error: ' + err.message);
+  }
 
   return { statusCode: 200 };
 }
+
 
 
 async function handleLeaveGame(body, connectionId) {
@@ -240,4 +269,10 @@ async function removeConnection(connectionId, roomId, playerName) {
         TableName: TABLE_CONNECTIONS,
         Key: roomId,
     }));
+}
+async function debugBroadcast(roomId, message) {
+  await broadcastToRoom(roomId, {
+    type: 'debug',
+    message,
+  });
 }

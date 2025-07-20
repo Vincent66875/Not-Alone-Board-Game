@@ -86,6 +86,7 @@ export function initializeGame(roomId: string, players: Player[]): Game {
 }
 
 export function startGame(game: Game): Game {
+  console.log("Starting starting the game");
   game.state.phase = 'planning';
   game.state.turn = 1;
   game.players = game.players.map((p, i) => ({
