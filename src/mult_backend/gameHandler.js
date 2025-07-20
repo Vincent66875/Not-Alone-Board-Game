@@ -7,7 +7,8 @@ const {v4: uuidv4} = require('uuid');
 
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
-import { startGame } from './gameEngine.js'; 
+const { startGame } = require('./gameEngine');
+
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
     let body;
