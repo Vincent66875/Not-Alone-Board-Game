@@ -29,9 +29,11 @@ export default function MultiplayerApp() {
   }
   function handleStartGame() {
     sendMessage({"type": 'startGame', roomId});
+    console.log("Sending: start room: " + roomId);
     setStage('game');
   }
   function handleLeaveGame() {
+    console.log("Sending: leave room: " + roomId);
     if (!roomId || !player) return;
     sendMessage({ type: 'leaveRoom', roomId, playerId: player.id });
     setRoomId(null);
@@ -88,9 +90,14 @@ export default function MultiplayerApp() {
           players={players}
           onStart={() => {
             console.log('Sending startGame message');
+            handleStartGame();
             sendMessage({ type: 'startGame', roomId });
           }}
-          onLeave={() => sendMessage({ type: 'leaveRoom', roomId, player })}
+          onLeave={() => {
+            console.log('Sending LeaveGame message');
+            handleLeaveGame();
+            sendMessage({ type: 'leaveRoom', roomId, player })
+          }}
         />
       )}
 

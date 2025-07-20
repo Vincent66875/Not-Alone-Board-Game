@@ -90,8 +90,6 @@ async function handleJoinRoom(body, connectionId) {
         players: game.players.map(p => p.name),
         readyToStart: game.players.length >= 1,
     });
-    console.log(game.players.map(p => p.name));
-    console.log(game.player);
 
     return { statusCode: 200 };
 }
@@ -127,37 +125,30 @@ async function handleEndTurn(body, connectionId) {
 
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
-  console.log('StartGame received for room:', roomId);
-
+  removeConnection(connectionId, roomId);
+  return { statusCode: 200 };
   if (!roomId) {
-    console.log('Missing roomId');
     return { statusCode: 400, body: 'Missing roomId' };
   }
 
   const game = await getGame(roomId);
   if (!game) {
-    console.log('Game not found for room:', roomId);
     return { statusCode: 404, body: 'Game not found' };
   }
 
-  console.log('Game found:', JSON.stringify(game, null, 2));
 
   const updatedGame = startGame(game);
-  console.log('Game after startGame:', JSON.stringify(game, null, 2));
   await saveGame(updatedGame);
-  console.log('Game saved to DB');
 
   await broadcastToRoom(roomId, {
     type: 'stageUpdate',
     stage: 'game',
   });
-  console.log('Sent stageUpdate');
 
   await broadcastToRoom(roomId, {
     type: 'gameUpdate',
     gameState: game.state,
   });
-  console.log('Sent gameUpdate');
 
   return { statusCode: 200 };
 }
