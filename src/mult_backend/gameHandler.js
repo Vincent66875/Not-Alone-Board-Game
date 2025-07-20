@@ -125,8 +125,10 @@ async function handleEndTurn(body, connectionId) {
 
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
-  removeConnection(connectionId, roomId);
-  return { statusCode: 200 };
+  await broadcastToRoom(roomId, {
+    type: 'Test broadCast',
+    stage: 'join',
+  });
   if (!roomId) {
     return { statusCode: 400, body: 'Missing roomId' };
   }
