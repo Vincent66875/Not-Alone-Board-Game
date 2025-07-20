@@ -140,9 +140,9 @@ async function handleStartGame(body, connectionId) {
 
   console.log('Game found:', JSON.stringify(game, null, 2));
 
-  startGame(game);
+  const updatedGame = startGame(game);
   console.log('Game after startGame:', JSON.stringify(game, null, 2));
-  await saveGame(game);
+  await saveGame(updatedGame);
   console.log('Game saved to DB');
 
   await broadcastToRoom(roomId, {

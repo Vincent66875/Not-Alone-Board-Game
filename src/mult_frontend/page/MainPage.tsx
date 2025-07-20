@@ -30,7 +30,10 @@ export default function MainPage({ roomId, playerName, players, onStart, onLeave
 
         {canStart ? (
           <button
-            onClick={onStart}
+            onClick={()=>{
+                onStart();
+                console.log('Start Game clicked');
+            }}
             className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold"
           >
             Start Game

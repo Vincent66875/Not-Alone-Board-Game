@@ -86,8 +86,11 @@ export default function MultiplayerApp() {
           roomId={roomId}
           playerName={player.name}
           players={players}
-          onStart={handleStartGame}
-          onLeave={handleLeaveGame}
+          onStart={() => {
+            console.log('Sending startGame message');
+            sendMessage({ type: 'startGame', roomId });
+          }}
+          onLeave={() => sendMessage({ type: 'leaveRoom', roomId, player })}
         />
       )}
 
