@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import './App.css';
@@ -7,8 +6,6 @@ import LandingPage from './components/LandingPage';
 import SinglePlayerGame from './components/SinglePlayer';
 
 export default function App() {
-  const [mode, setMode] = useState<'landing' | 'single' | 'multi'>('landing');
-
   return (
     <>
       <video

@@ -93,7 +93,6 @@ export function resolveTurn(state: GameState): GameState {
 
     if(!caught){
         newState.abilityType = abilityFromLocation(state.playerLoc);
-        // console.log("Assign abilityType: " + newState.abilityType + " in " + newState.playerLoc);
     }else{
         console.log("caught!");
     }
