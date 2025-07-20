@@ -122,30 +122,42 @@ async function handleEndTurn(body, connectionId) {
 }
 
 async function handleStartGame(body, connectionId) {
-    const { roomId } = body;
-    if (!roomId) {
-        return { statusCode: 400, body: 'Missing roomId' };
-    }
+  const { roomId } = body;
+  console.log('StartGame received for room:', roomId);
 
-    const game = await getGame(roomId);
-    if (!game) {
-        return { statusCode: 404, body: 'Game not found' };
-    }
-    const updateGame = startGame(game);
-    await saveGame(game);
+  if (!roomId) {
+    console.log('Missing roomId');
+    return { statusCode: 400, body: 'Missing roomId' };
+  }
 
-    await broadcastToRoom(roomId, {
-        type: 'gameUpdate',
-        state: game.state,
-    });
+  const game = await getGame(roomId);
+  if (!game) {
+    console.log('Game not found for room:', roomId);
+    return { statusCode: 404, body: 'Game not found' };
+  }
 
-    await broadcastToRoom(roomId, {
-        type: 'stageUpdate',
-        state: 'game',
-    })
+  console.log('Game found:', JSON.stringify(game, null, 2));
 
-    return { statusCode: 200 };
+  startGame(game);
+  console.log('Game after startGame:', JSON.stringify(game, null, 2));
+  await saveGame(game);
+  console.log('Game saved to DB');
+
+  await broadcastToRoom(roomId, {
+    type: 'stageUpdate',
+    stage: 'game',
+  });
+  console.log('Sent stageUpdate');
+
+  await broadcastToRoom(roomId, {
+    type: 'gameUpdate',
+    gameState: game.state,
+  });
+  console.log('Sent gameUpdate');
+
+  return { statusCode: 200 };
 }
+
 
 async function handleLeaveGame(body, connectionId) {
     const { roomId, playerId } = body;

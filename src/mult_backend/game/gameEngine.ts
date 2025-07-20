@@ -97,6 +97,7 @@ export function startGame(game: Game): Game {
     riverActive: false,
   }));
   game.state.history.push('Game started. Planning phase begins.');
+  console.log("Game started! + player: " + game.players)
   return game;
 }
 

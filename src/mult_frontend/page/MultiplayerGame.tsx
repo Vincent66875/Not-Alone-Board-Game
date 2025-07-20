@@ -43,25 +43,34 @@ export default function MultiplayerApp() {
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
     if(!latestMessage) return;
-
+    console.log('Received message:', latestMessage);
     if(latestMessage.type === 'roomUpdate' && latestMessage.roomId === roomId){
       setPlayers(latestMessage.players || []);
+      console.log('Updated players:', latestMessage.players);
     }
 
     if(latestMessage.type === 'stageUpdate' && latestMessage.stage === 'game'){
       setStage('game');
+      console.log('Stage updated to game');
     }
     if (latestMessage.type === 'gameUpdate') {
       setGameState(latestMessage.gameState);
+      console.log('GameState set:', latestMessage.gameState);
 
       // Update our Player object by matching id
       if (player && player.id) {
         const updatedPlayer = latestMessage.gameState.players.find((p: Player) => p.id === player.id);
-        if (updatedPlayer) setPlayer(updatedPlayer);
+        if (updatedPlayer){ 
+          setPlayer(updatedPlayer);
+          console.log('Updated player by id:', updatedPlayer);
+        }
       } else if (player && !player.id) {
         // Fallback: find by name (for initial join before player.id assigned)
         const updatedPlayer = latestMessage.gameState.players.find((p: Player) => p.name === player.name);
-        if (updatedPlayer) setPlayer(updatedPlayer);
+        if (updatedPlayer) {
+          setPlayer(updatedPlayer);
+          console.log('Updated player by name:', updatedPlayer);
+        }
       }
     }
   }, [messages, roomId, player]);
