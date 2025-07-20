@@ -85,6 +85,21 @@ export function initializeGame(roomId: string, players: Player[]): Game {
   };
 }
 
+export function startGame(game: Game): Game {
+  game.state.phase = 'planning';
+  game.state.turn = 1;
+  game.players = game.players.map((p, i) => ({
+    ...p,
+    isCreature: i === 0,
+    hand: [1, 2, 3, 4, 5],
+    discard: [],
+    playedCard: undefined,
+    riverActive: false,
+  }));
+  game.state.history.push('Game started. Planning phase begins.');
+  return game;
+}
+
 export function handlePlayCard(
   game: GameState,
   player: Player,
@@ -163,20 +178,6 @@ export function handlePlayCard(
       player.survival.push("RandomSurvivalCard");
       game.history.push(`${player.name} drew a Survival card.`);
       break;
-
-    case 4: // Beach
-  if (!game.effectsUsed?.beachUsed) {
-    if (!game.board.beachMarker) {
-      game.board.beachMarker = true;
-    } else {
-      game.board.beachMarker = false;
-      game.history.push(`${player.name} advanced the Rescue token via Beach.`);
-    }
-    game.effectsUsed = { ...game.effectsUsed, beachUsed: true };
-  } else {
-    game.history.push(`${player.name} used Beach, but its effect was already used this turn.`);
-  }
-  break;
 
     default:
       break;

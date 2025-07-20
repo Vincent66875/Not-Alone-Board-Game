@@ -1,13 +1,13 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const { ApiGatewayManagementApiClient, PostToConnectionCommand } = require('@aws-sdk/client-apigatewaymanagementapi');
-
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-2' }));
 const apiGateway = new ApiGatewayManagementApiClient({ endpoint: process.env.WEBSOCKET_ENDPOINT });
+const {v4: uuidv4} = require('uuid');
 
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
-
+import { startGame } from './gameEngine.js'; 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
     let body;
@@ -45,6 +45,8 @@ async function handleJoinRoom(body, connectionId) {
     }
 
     let game = await getGame(roomId);
+    const playerId = uuidv4();
+
     if (!game) {
         game = {
             roomId,
@@ -65,7 +67,17 @@ async function handleJoinRoom(body, connectionId) {
 
     const alreadyJoined = game.players.some(p => p.connectionId === connectionId);
     if (!alreadyJoined) {
-        game.players.push({ connectionId, name: playerName });
+        game.players.push({
+            id: playerId,
+            name: playerName,
+            connectionId,
+            hand: [],
+            discard: [],
+            isCreature: false,
+            will: 0,
+            survival: [],
+            riverActive: false,
+        });
     }
 
     await saveGame(game);
@@ -119,21 +131,25 @@ async function handleStartGame(body, connectionId) {
     if (!game) {
         return { statusCode: 404, body: 'Game not found' };
     }
-
-    game.state.phase = 'main';
+    const updateGame = startGame(game);
     await saveGame(game);
 
     await broadcastToRoom(roomId, {
-        type: 'gameStart',
+        type: 'gameUpdate',
         state: game.state,
     });
+
+    await broadcastToRoom(roomId, {
+        type: 'stageUpdate',
+        state: 'game',
+    })
 
     return { statusCode: 200 };
 }
 
 async function handleLeaveGame(body, connectionId) {
-    const { roomId } = body;
-    if (!roomId) {
+    const { roomId, playerId } = body;
+    if (!roomId || !playerId) {
         return { statusCode: 400, body: 'Missing roomId' };
     }
 
@@ -141,13 +157,14 @@ async function handleLeaveGame(body, connectionId) {
     if (!game) {
         return { statusCode: 404, body: 'Game not found' };
     }
+    game.players = game.players.filter(p => p.id !== playerId);
     if(game.players.length === 0){
         await deleteGame(roomId);
     }else{
         await saveGame(game);
         await broadcastToRoom(roomId, {
             type: 'roomUpdate',
-            players: game.players.map(p=>p.name),
+            players: game.players,
             readyToStart: game.players.length>=1,
         }); 
     }

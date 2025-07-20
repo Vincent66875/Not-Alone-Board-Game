@@ -10,14 +10,21 @@ export default function MultiplayerApp() {
   const [players, setPlayers] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [playerName, setPlayerName] = useState<string | null>(null);
   const [stage, setStage] = useState<'join' | 'lobby' | 'game'>('join');
 
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
 
   function handleJoin(roomId: string, playerName: string) {
     setRoomId(roomId);
-    setPlayerName(playerName);
+    setPlayer({ 
+      id: '',
+      name: playerName,
+      connectionId: '',
+      hand: [],
+      discard: [],
+      isCreature: false,
+      will: 0,
+      survival: [] });
     setStage('lobby');
   }
   function handleStartGame() {
@@ -25,10 +32,11 @@ export default function MultiplayerApp() {
     setStage('game');
   }
   function handleLeaveGame() {
-    sendMessage({ type: 'leaveRoom', roomId, playerName });
-    // Reset all game state
+    if (!roomId || !player) return;
+    sendMessage({ type: 'leaveRoom', roomId, playerId: player.id });
     setRoomId(null);
-    setPlayerName(null);
+    setPlayer(null);
+    setGameState(null);
     setPlayers([]);
     setStage('join');
   }
@@ -45,10 +53,18 @@ export default function MultiplayerApp() {
     }
     if (latestMessage.type === 'gameUpdate') {
       setGameState(latestMessage.gameState);
-      const self = latestMessage.gameState.players.find((p: Player) => p.name === playerName);
-      if (self) setPlayer(self);
+
+      // Update our Player object by matching id
+      if (player && player.id) {
+        const updatedPlayer = latestMessage.gameState.players.find((p: Player) => p.id === player.id);
+        if (updatedPlayer) setPlayer(updatedPlayer);
+      } else if (player && !player.id) {
+        // Fallback: find by name (for initial join before player.id assigned)
+        const updatedPlayer = latestMessage.gameState.players.find((p: Player) => p.name === player.name);
+        if (updatedPlayer) setPlayer(updatedPlayer);
+      }
     }
-  }, [messages]);
+  }, [messages, roomId, player]);
 
   return (
     <>
@@ -56,43 +72,43 @@ export default function MultiplayerApp() {
 
       {stage === 'join' && <JoinRoom onJoin={handleJoin} sendMessage={sendMessage} />}
 
-      {stage === 'lobby' && roomId && playerName && (
+      {stage === 'lobby' && roomId && player && (
         <MainPage
           roomId={roomId}
-          playerName={playerName}
+          playerName={player.name}
           players={players}
           onStart={handleStartGame}
           onLeave={handleLeaveGame}
         />
       )}
 
-    {stage === 'game' && (
-      <div className="text-white text-center mt-10">
-        {gameState && player ? (
-          <>
-            {gameState.phase === 'planning' ? (
-              <PlanningPhase
-                gameState={gameState}
-                player={player}
-                onCardSelect={(cardId: number) => {
-                  sendMessage({
-                    type: 'playCard',
-                    roomId,
-                    playerName,
-                    cardId,
-                  });
-                }}
-              />
-            ) : (
-              <h2>Phase: {gameState.phase}</h2>
-            )}
-          </>
-        ) : (
-          <h2>Waiting for game data...</h2>
-        )}
-      </div>
-    )}
-
+      {stage === 'game' && (
+        <div className="text-white text-center mt-10">
+          {gameState && player ? (
+            <>
+              {gameState.phase === 'planning' ? (
+                <PlanningPhase
+                  gameState={gameState}
+                  player={player}
+                  onCardSelect={(cardId: number) => {
+                    if (!roomId || !player) return;
+                    sendMessage({
+                      type: 'playCard',
+                      roomId,
+                      playerId: player.id,
+                      cardId,
+                    });
+                  }}
+                />
+              ) : (
+                <h2>Phase: {gameState.phase}</h2>
+              )}
+            </>
+          ) : (
+            <h2>Waiting for game data...</h2>
+          )}
+        </div>
+      )}
     </>
   );
 }
