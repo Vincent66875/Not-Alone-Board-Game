@@ -90,6 +90,8 @@ async function handleJoinRoom(body, connectionId) {
         players: game.players.map(p => p.name),
         readyToStart: game.players.length >= 1,
     });
+    console.log(game.players.map(p => p.name));
+    console.log(game.player);
 
     return { statusCode: 200 };
 }
