@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 export type GamePhase = 'lobby' | 'planning' | 'hunting' | 'resolution' | 'ended';
 
 export type LocationCard = 
@@ -93,6 +94,7 @@ export function startGame(game: Game): Game {
   game.players = game.players.map((p, i) => {
     const newPlayer: Player = {
       ...p,
+      id: p.id || uuidv4(),
       isCreature: i === 0,
       hand: [1, 2, 3, 4, 5],
       discard: [],

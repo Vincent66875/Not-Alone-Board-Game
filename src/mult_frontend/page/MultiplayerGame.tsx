@@ -56,26 +56,33 @@ export default function MultiplayerApp() {
       console.log('Stage updated to game');
     }
     if (latestMessage.type === 'gameUpdate') {
-      setGameState(latestMessage.gameState);
-      console.log('GameState set:', latestMessage.gameState);
+      const updatedGameState = latestMessage.gameState;
+      setGameState(updatedGameState);
+      console.log('GameState set:', updatedGameState);
+      console.log('Cuurent player:', player);
 
-      // Update our Player object by matching id
-      if (player && player.id) {
-        const updatedPlayer = latestMessage.gameState.players?.map((p: Player) => p.id === player.id);
-        if (updatedPlayer){ 
-          setPlayer(updatedPlayer);
-          console.log('Updated player by id:', updatedPlayer);
+      if (player) {
+        // Try to match by ID (once assigned)
+        let updatedPlayer = player.id
+          ? updatedGameState.players?.find((p: Player) => p.id === player.id)
+          : null;
+
+        // Fallback: match by name if ID not available yet
+        if (!updatedPlayer) {
+          updatedPlayer = updatedGameState.players?.find(
+            (p: Player) => p.name === player.name
+          );
         }
-      } else if (player && !player.id) {
-        // Fallback: find by name (for initial join before player.id assigned)
-        const updatedPlayer = latestMessage.gameState.players?.find((p: Player) => p.name === player.name);
+
         if (updatedPlayer) {
           setPlayer(updatedPlayer);
-          console.log('Updated player by name:', updatedPlayer);
+          console.log('Updated player info from gameState:', updatedPlayer);
+        } else {
+          console.warn('No matching player found in gameState for', player);
         }
       }
     }
-  }, [messages, roomId, player]);
+  }, [messages, roomId]);
 
   return (
     <>
@@ -103,7 +110,7 @@ export default function MultiplayerApp() {
 
       {stage === 'game' && (
         <div className="text-white text-center mt-10">
-          {gameState && player ? (
+          {gameState && player && player.hand.length > 0 ?  (
             <>
               {gameState.phase === 'planning' ? (
                 <PlanningPhase
