@@ -17,7 +17,6 @@ const PlanningPhase: React.FC<Props> = ({ player, gameState, onCardSelect }) => 
     <div className="flex flex-wrap justify-center gap-4 mt-6">
       {allLocations.map((locName, locId) => {
         const inHand = numericHand.includes(locId);
-        console.log("Card " + locName + " in hand: " + inHand + " because: " + locId + " not in " + numericHand);
         return (
           <img
             key={locId}

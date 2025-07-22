@@ -72,7 +72,9 @@ export default function MultiplayerApp() {
     if (latestMessage.type === 'gameUpdate') {
       const updatedGameState = latestMessage.gameState;
       setGameState(updatedGameState);
+      setPlayers(latestMessage.players);
       console.log('GameState set:', updatedGameState);
+      console.log('Game player: ', player);
 
       if (!updatedGameState.players) {
         console.warn('gameState.players is undefined or missing', updatedGameState);

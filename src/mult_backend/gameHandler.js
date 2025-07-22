@@ -199,6 +199,7 @@ async function handleStartGame(body, connectionId) {
     await broadcastToRoom(roomId, {
       type: 'gameUpdate',
       gameState: updatedGame.state,
+      players: updatedGame.players,
     });
     await debugBroadcast(roomId, 'Broadcasted gameUpdate');
   } catch (err) {
