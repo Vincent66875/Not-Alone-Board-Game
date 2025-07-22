@@ -159,7 +159,7 @@ async function handleStartGame(body, connectionId) {
 
   let updatedGame;
   try {
-    updatedGame = startGame(game);
+    updatedGame = startGame(game); // assumes IDs and connectionIds already exist
     await debugBroadcast(roomId, 'Game after startGame: ' + JSON.stringify(updatedGame));
   } catch (err) {
     await debugBroadcast(roomId, 'Error in startGame: ' + err.message);
@@ -169,8 +169,8 @@ async function handleStartGame(body, connectionId) {
   try {
     await saveGame(updatedGame);
     await broadcastToRoom(roomId, {
-        type: 'roomUpdate',
-        players: updatedGame.players.map(p => ({
+      type: 'roomUpdate',
+      players: updatedGame.players.map(p => ({
         id: p.id,
         name: p.name,
         connectionId: p.connectionId,
@@ -180,12 +180,12 @@ async function handleStartGame(body, connectionId) {
         will: p.will,
         survival: p.survival,
         riverActive: p.riverActive,
-        })),
-        readyToStart: true,
+      })),
+      readyToStart: true,
     });
-    await debugBroadcast(roomId, 'Game saved');
+    await debugBroadcast(roomId, 'Broadcasted roomUpdate');
   } catch (err) {
-    await debugBroadcast(roomId, 'Error saving game: ' + err.message);
+    await debugBroadcast(roomId, 'Error saving/broadcasting roomUpdate: ' + err.message);
     return { statusCode: 500, body: 'Save failed' };
   }
 
@@ -200,7 +200,6 @@ async function handleStartGame(body, connectionId) {
       type: 'gameUpdate',
       gameState: updatedGame.state,
     });
-
     await debugBroadcast(roomId, 'Broadcasted gameUpdate');
   } catch (err) {
     await debugBroadcast(roomId, 'Broadcast error: ' + err.message);
@@ -208,8 +207,6 @@ async function handleStartGame(body, connectionId) {
 
   return { statusCode: 200 };
 }
-
-
 
 async function handleLeaveGame(body, connectionId) {
     const { roomId, playerId } = body;

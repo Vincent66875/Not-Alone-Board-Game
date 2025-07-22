@@ -87,25 +87,27 @@ export function initializeGame(roomId: string, players: Player[]): Game {
 
 export function startGame(game: Game): Game {
   console.log("Starting the game");
+
   game.state.phase = 'planning';
   game.state.turn = 1;
 
   game.players = game.players.map((p, i) => {
-    const newPlayer: Player = {
-      ...p,
+    const updatedPlayer: Player = {
+      ...p, // Preserve id, name, connectionId, will, survival, etc.
       isCreature: i === 0,
       hand: [1, 2, 3, 4, 5],
       discard: [],
       riverActive: false,
     };
-    // Only include playedCard if it's defined
-    if (p.playedCard !== undefined) {
-      newPlayer.playedCard = p.playedCard;
-    }
-    return newPlayer;
-  });
 
+    if (p.playedCard !== undefined) {
+      updatedPlayer.playedCard = p.playedCard;
+    }
+
+    return updatedPlayer;
+  });
   game.state.history.push('Game started. Planning phase begins.');
+
   console.log("Game started! Player list:", game.players);
   return game;
 }
