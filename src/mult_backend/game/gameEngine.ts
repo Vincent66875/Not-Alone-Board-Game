@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 export type GamePhase = 'lobby' | 'planning' | 'hunting' | 'resolution' | 'ended';
 
 export type LocationCard = 
@@ -92,17 +91,13 @@ export function startGame(game: Game): Game {
   game.state.turn = 1;
 
   game.players = game.players.map((p, i) => {
-    console.log("Before assigning ID:", p);
     const newPlayer: Player = {
       ...p,
-      id: p.id || uuidv4(),
       isCreature: i === 0,
       hand: [1, 2, 3, 4, 5],
       discard: [],
       riverActive: false,
     };
-    console.log("Assigned player:", newPlayer);
-
     // Only include playedCard if it's defined
     if (p.playedCard !== undefined) {
       newPlayer.playedCard = p.playedCard;

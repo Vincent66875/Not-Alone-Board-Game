@@ -44,45 +44,71 @@ export default function MultiplayerApp() {
   }
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
-    if(!latestMessage) return;
+    if (!latestMessage) return;
     console.log('Received message:', latestMessage);
-    if(latestMessage.type === 'roomUpdate' && latestMessage.roomId === roomId){
+
+    if (latestMessage.type === 'roomUpdate' && latestMessage.roomId === roomId) {
       setPlayers(latestMessage.players || []);
       console.log('Updated players:', latestMessage.players);
+
+      // Also update our player if it matches by connectionId or name
+      if (player) {
+        const updatedPlayer = latestMessage.players.find(
+          (p: Player) =>
+            p.connectionId === player.connectionId || p.name === player.name
+        );
+        if (updatedPlayer) {
+          setPlayer(updatedPlayer);
+          console.log('Updated player from roomUpdate:', updatedPlayer);
+        }
+      }
     }
 
-    if(latestMessage.type === 'stageUpdate' && latestMessage.stage === 'game'){
+    if (latestMessage.type === 'stageUpdate' && latestMessage.stage === 'game') {
       setStage('game');
       console.log('Stage updated to game');
     }
+
     if (latestMessage.type === 'gameUpdate') {
       const updatedGameState = latestMessage.gameState;
       setGameState(updatedGameState);
       console.log('GameState set:', updatedGameState);
-      console.log('Cuurent player:', player);
 
-      if (player) {
-        // Try to match by ID (once assigned)
-        let updatedPlayer = player.id
-          ? updatedGameState.players?.find((p: Player) => p.id === player.id)
-          : null;
+      if (!updatedGameState.players) {
+        console.warn('gameState.players is undefined or missing', updatedGameState);
+        return;
+      }
 
-        // Fallback: match by name if ID not available yet
-        if (!updatedPlayer) {
-          updatedPlayer = updatedGameState.players?.find(
-            (p: Player) => p.name === player.name
-          );
-        }
+      if (!player) return;
 
-        if (updatedPlayer) {
-          setPlayer(updatedPlayer);
-          console.log('Updated player info from gameState:', updatedPlayer);
-        } else {
-          console.warn('No matching player found in gameState for', player);
-        }
+      // Try to find updated player by connectionId first
+      let updatedPlayer = updatedGameState.players.find(
+        (p: Player) => p.connectionId === player.connectionId
+      );
+
+      // Fallback to id if connectionId didn't match
+      if (!updatedPlayer && player.id) {
+        updatedPlayer = updatedGameState.players.find(
+          (p: Player) => p.id === player.id
+        );
+      }
+
+      // Final fallback to name
+      if (!updatedPlayer) {
+        updatedPlayer = updatedGameState.players.find(
+          (p: Player) => p.name === player.name
+        );
+      }
+
+      if (updatedPlayer) {
+        setPlayer(updatedPlayer);
+        console.log('Updated player info from gameState:', updatedPlayer);
+      } else {
+        console.warn('No matching player found in gameState for', player);
       }
     }
   }, [messages, roomId]);
+
 
   return (
     <>
@@ -110,7 +136,7 @@ export default function MultiplayerApp() {
 
       {stage === 'game' && (
         <div className="text-white text-center mt-10">
-          {gameState && player && player.hand.length > 0 ?  (
+          {gameState && player ? (
             <>
               {gameState.phase === 'planning' ? (
                 <PlanningPhase
