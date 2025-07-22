@@ -92,6 +92,7 @@ export function startGame(game: Game): Game {
   game.state.turn = 1;
 
   game.players = game.players.map((p, i) => {
+    console.log("Before assigning ID:", p);
     const newPlayer: Player = {
       ...p,
       id: p.id || uuidv4(),
@@ -100,6 +101,8 @@ export function startGame(game: Game): Game {
       discard: [],
       riverActive: false,
     };
+    console.log("Assigned player:", newPlayer);
+
     // Only include playedCard if it's defined
     if (p.playedCard !== undefined) {
       newPlayer.playedCard = p.playedCard;
