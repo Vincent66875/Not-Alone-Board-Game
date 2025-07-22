@@ -168,6 +168,21 @@ async function handleStartGame(body, connectionId) {
 
   try {
     await saveGame(updatedGame);
+    await broadcastToRoom(roomId, {
+        type: 'roomUpdate',
+        players: updatedGame.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        connectionId: p.connectionId,
+        hand: p.hand,
+        discard: p.discard,
+        isCreature: p.isCreature,
+        will: p.will,
+        survival: p.survival,
+        riverActive: p.riverActive,
+        })),
+        readyToStart: true,
+    });
     await debugBroadcast(roomId, 'Game saved');
   } catch (err) {
     await debugBroadcast(roomId, 'Error saving game: ' + err.message);
@@ -185,6 +200,7 @@ async function handleStartGame(body, connectionId) {
       type: 'gameUpdate',
       gameState: updatedGame.state,
     });
+
     await debugBroadcast(roomId, 'Broadcasted gameUpdate');
   } catch (err) {
     await debugBroadcast(roomId, 'Broadcast error: ' + err.message);
