@@ -72,41 +72,35 @@ export default function MultiplayerApp() {
     if (latestMessage.type === 'gameUpdate') {
       const updatedGameState = latestMessage.gameState;
       setGameState(updatedGameState);
-      setPlayers(latestMessage.players);
-      console.log('GameState set:', updatedGameState);
-      console.log('Game player: ', player);
+      
+      if (latestMessage.players) {
+        setPlayers(latestMessage.players);
+      } else {
+        console.warn('gameUpdate missing players array');
+        setPlayers([]); // or keep old players
+      }
 
-      if (!updatedGameState.players) {
-        console.warn('gameState.players is undefined or missing', updatedGameState);
+      if (!latestMessage.players) {
+        // no players => can't find player info, so bail
         return;
       }
 
       if (!player) return;
 
-      // Try to find updated player by connectionId first
-      let updatedPlayer = updatedGameState.players.find(
+      // Find updated player from separate players array, NOT inside gameState
+      let updatedPlayer = latestMessage.players.find(
         (p: Player) => p.connectionId === player.connectionId
+      ) || latestMessage.players.find(
+        (p: Player) => p.id === player.id
+      ) || latestMessage.players.find(
+        (p: Player) => p.name === player.name
       );
-
-      // Fallback to id if connectionId didn't match
-      if (!updatedPlayer && player.id) {
-        updatedPlayer = updatedGameState.players.find(
-          (p: Player) => p.id === player.id
-        );
-      }
-
-      // Final fallback to name
-      if (!updatedPlayer) {
-        updatedPlayer = updatedGameState.players.find(
-          (p: Player) => p.name === player.name
-        );
-      }
 
       if (updatedPlayer) {
         setPlayer(updatedPlayer);
-        console.log('Updated player info from gameState:', updatedPlayer);
+        console.log('Updated player info from gameUpdate:', updatedPlayer);
       } else {
-        console.warn('No matching player found in gameState for', player);
+        console.warn('No matching player found in gameUpdate players for', player);
       }
     }
   }, [messages, roomId]);

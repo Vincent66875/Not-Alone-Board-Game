@@ -10,7 +10,7 @@ export type LocationCard =
 | 'Shelter'
 | 'Wreck'
 | 'Source'
-| 'Artifact';
+| 'Artefact';
 
 export const allLocations: LocationCard[] = [
     'Lair',
@@ -22,7 +22,7 @@ export const allLocations: LocationCard[] = [
     'Shelter',
     'Wreck',
     'Source',
-    'Artifact'
+    'Artefact'
 ];
 
 

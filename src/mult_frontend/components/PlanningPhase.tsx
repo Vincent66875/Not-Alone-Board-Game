@@ -1,7 +1,7 @@
 // components/PlanningPhase.tsx
 import React from 'react';
 import type { Player, GameState } from '../../mult_backend/game/gameEngine';
-import { allLocations } from '../../game/ai';
+import { allLocations } from '../../mult_backend/game/gameEngine';
 
 type Props = {
   player: Player;
@@ -10,13 +10,17 @@ type Props = {
 };
 
 const PlanningPhase: React.FC<Props> = ({ player, gameState, onCardSelect }) => {
-    const numericHand = player.hand.map(Number);
-    console.log("Raw player:", player);
+  const numericHand = player.hand.map(Number);
+  console.log("Hands: ", player.hand);
+  console.log('Card at index 6:', allLocations[6]);
+  console.log('allLocations:', allLocations);
 
   return (
     <div className="flex flex-wrap justify-center gap-4 mt-6">
-      {allLocations.map((locName, locId) => {
+      {allLocations.map((locName, index) => {
+        const locId = index + 1; // card IDs start at 1
         const inHand = numericHand.includes(locId);
+
         return (
           <img
             key={locId}
