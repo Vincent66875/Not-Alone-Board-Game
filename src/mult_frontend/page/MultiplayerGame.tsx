@@ -61,14 +61,14 @@ export default function MultiplayerApp() {
 
       // Update our Player object by matching id
       if (player && player.id) {
-        const updatedPlayer = latestMessage.gameState.players.find((p: Player) => p.id === player.id);
+        const updatedPlayer = latestMessage.gameState.players?.map((p: Player) => p.id === player.id);
         if (updatedPlayer){ 
           setPlayer(updatedPlayer);
           console.log('Updated player by id:', updatedPlayer);
         }
       } else if (player && !player.id) {
         // Fallback: find by name (for initial join before player.id assigned)
-        const updatedPlayer = latestMessage.gameState.players.find((p: Player) => p.name === player.name);
+        const updatedPlayer = latestMessage.gameState.players?.find((p: Player) => p.name === player.name);
         if (updatedPlayer) {
           setPlayer(updatedPlayer);
           console.log('Updated player by name:', updatedPlayer);
