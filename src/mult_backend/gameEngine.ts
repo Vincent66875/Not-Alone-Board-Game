@@ -1,5 +1,15 @@
 export type GamePhase = 'lobby' | 'planning' | 'hunting' | 'resolution' | 'ended';
 
+export function getPhaseNumber(phase: GamePhase): number | null {
+  const map: Record<Exclude<GamePhase, 'lobby'>, number> = {
+    planning: 1,
+    hunting: 2,
+    resolution: 3,
+    ended: 4,
+  };
+  return phase === 'lobby' ? null : map[phase];
+}
+
 export type LocationCard = 
 | 'Lair'
 | 'Jungle'
@@ -27,6 +37,7 @@ export const allLocations: LocationCard[] = [
 
 
 export interface BoardState {
+  player_num: number;
   rescue: number; 
   assimilation: number;
   beachMarker: boolean;
@@ -69,6 +80,7 @@ export function initializeGame(roomId: string, players: Player[]): Game {
     phase: 'lobby',
     turn: 0,
     board: {
+      player_num: players.length,
       rescue: 0,
       assimilation: 0,
       beachMarker: false,
@@ -94,6 +106,7 @@ export function startGame(game: Game): Game {
   game.players = game.players.map((p, i) => {
     const updatedPlayer: Player = {
       ...p, // Preserve id, name, connectionId, will, survival, etc.
+      will: 3,
       isCreature: i === 0,
       hand: [1, 2, 3, 4, 5],
       discard: [],

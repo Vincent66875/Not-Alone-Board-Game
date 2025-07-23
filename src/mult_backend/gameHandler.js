@@ -8,7 +8,7 @@ const {v4: uuidv4} = require('uuid');
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-const { startGame } = require('./game/gameEngine');
+const { startGame } = require('./gameEngine');
 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
@@ -159,7 +159,7 @@ async function handleStartGame(body, connectionId) {
 
   let updatedGame;
   try {
-    updatedGame = startGame(game); // assumes IDs and connectionIds already exist
+    updatedGame = startGame(game);
     await debugBroadcast(roomId, 'Game after startGame: ' + JSON.stringify(updatedGame));
   } catch (err) {
     await debugBroadcast(roomId, 'Error in startGame: ' + err.message);

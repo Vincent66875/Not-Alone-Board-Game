@@ -1,11 +1,12 @@
 import { useState } from 'react';
 
 interface JoinRoomProps {
+  connection: boolean;
   onJoin?: (roomId: string, playerName: string) => void;
   sendMessage: (msg: any) => void; 
 }
 
-export default function JoinRoom({ onJoin, sendMessage }: JoinRoomProps) {
+export default function JoinRoom({ connection, onJoin, sendMessage }: JoinRoomProps) {
   const [roomId, setRoomId] = useState('');
   const [playerName, setPlayerName] = useState('');
 
@@ -55,15 +56,25 @@ export default function JoinRoom({ onJoin, sendMessage }: JoinRoomProps) {
 
         <button
           type="submit"
-          className="bg-indigo-600 hover:bg-indigo-700 rounded py-2 font-semibold transition"
+          disabled={!connection}
+          className={`rounded py-2 font-semibold transition ${
+            connection
+            ? 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'
+            : 'bg-indigo-600 cursor-not-allowed filter grayscale'
+          }`}
         >
           Join Room
         </button>
 
         <button
           type="button"
+          disabled={!connection}
           onClick={handleCreate}
-          className='bg-green-600 hover:bg-green-700 rounded py-2 font-semibold transition'
+          className={`rounded py-2 font-semibold transition ${
+            connection
+            ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
+            : 'bg-green-600 cursor-not-allowed filter grayscale'
+          }`}
         >
             Create Room
         </button>

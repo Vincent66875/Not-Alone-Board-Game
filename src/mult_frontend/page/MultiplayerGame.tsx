@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import JoinRoom from './JoinRoom';
 import MainPage from './MainPage';
 import PlanningPhase from '../components/PlanningPhase';
+import GameTopBar from '../components/GameTopBar';
 import { useWebSocket } from '../hooks/useWebsocket';
-import type { GameState, Player } from '../../mult_backend/game/gameEngine';
+import { getPhaseNumber, type GameState, type Player } from '../../mult_backend/gameEngine';
+import GameDownBar from '../components/GameDownBar';
 
 export default function MultiplayerApp() {
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [players, setPlayers] = useState<string[]>([]);
-  const [gameState, setGameState] = useState<GameState | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [gameState, setGameState] = useState<GameState | null>(null);
   const [stage, setStage] = useState<'join' | 'lobby' | 'game'>('join');
 
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
@@ -77,11 +79,6 @@ export default function MultiplayerApp() {
         setPlayers(latestMessage.players);
       } else {
         console.warn('gameUpdate missing players array');
-        setPlayers([]); // or keep old players
-      }
-
-      if (!latestMessage.players) {
-        // no players => can't find player info, so bail
         return;
       }
 
@@ -110,13 +107,13 @@ export default function MultiplayerApp() {
     <>
       {!connected && <p className="text-white text-center mt-10">Connecting to server...</p>}
 
-      {stage === 'join' && <JoinRoom onJoin={handleJoin} sendMessage={sendMessage} />}
+      {stage === 'join' && <JoinRoom connection={connected} onJoin={handleJoin} sendMessage={sendMessage} />}
 
       {stage === 'lobby' && roomId && player && (
         <MainPage
           roomId={roomId}
           playerName={player.name}
-          players={players}
+          players={players.map((p) => p.name)}
           onStart={() => {
             console.log('Sending startGame message');
             handleStartGame();
@@ -131,31 +128,47 @@ export default function MultiplayerApp() {
       )}
 
       {stage === 'game' && (
-        <div className="text-white text-center mt-10">
-          {gameState && player ? (
-            <>
-              {gameState.phase === 'planning' ? (
-                <PlanningPhase
-                  gameState={gameState}
-                  player={player}
-                  onCardSelect={(cardId: number) => {
-                    if (!roomId || !player) return;
-                    sendMessage({
-                      type: 'playCard',
-                      roomId,
-                      playerId: player.id,
-                      cardId,
-                    });
-                  }}
-                />
-              ) : (
-                <h2>Phase: {gameState.phase}</h2>
-              )}
-            </>
-          ) : (
-            <h2>Waiting for game data...</h2>
+        <>
+          {gameState && (
+            <GameTopBar
+              turn={gameState.turn}
+              phase={getPhaseNumber(gameState.phase)!}
+              R_Progress={gameState.board.rescue}
+              A_Progress={gameState.board.assimilation}
+              players_num={players.length}
+            />
           )}
-        </div>
+          <div className="text-white text-center mt-10">
+            {gameState && player ? (
+              <>
+                {gameState.phase === 'planning' ? (
+                  <PlanningPhase
+                    gameState={gameState}
+                    player={player}
+                    onCardSelect={(cardId: number) => {
+                      if (!roomId || !player) return;
+                      sendMessage({
+                        type: 'playCard',
+                        roomId,
+                        playerId: player.id,
+                        cardId,
+                      });
+                    }}
+                  />
+                ) : (
+                  <h2>Phase: {gameState.phase}</h2>
+                )}
+              </>
+            ) : (
+              <h2>Waiting for game data...</h2>
+            )}
+          {gameState && (
+            <GameDownBar
+              players={players}
+            />
+          )}
+          </div>
+        </>
       )}
     </>
   );
