@@ -105,17 +105,46 @@ async function handleJoinRoom(body, connectionId) {
 }
 
 async function handlePlayCard(body, connectionId) {
-    const { roomId, cardId } = body;
-    if (!roomId || !cardId) {
-        return { statusCode: 400, body: 'Missing roomId or cardId' };
+    const { roomId, player } = body;
+    const { playerId, playedCard, playedCardAlt } = player;
+
+    if (!roomId || !player.playerId) {
+        return { statusCode: 400, body: 'Missing roomId or playerId' };
+    }
+    if (!player.playedCard) {
+        return { statusCode: 400, body: 'Missing cardId' };
     }
 
-    await broadcastToRoom(roomId, {
-        type: 'cardPlayed',
-        connectionId,
-        cardId,
-    });
+    if (player.riverActive) {
+        if (!playedCard || !playedCardAlt) {
+        return { statusCode: 400, body: 'River active – need 2 cards' };
+        }
+        thisPlayer.playedCard = playedCard;
+        thisPlayer.playedCardAlt = playedCardAlt;
+    } else {
+        if (!playedCard) {
+        return { statusCode: 400, body: 'Missing cardId' };
+        }
+        thisPlayer.playedCard = playedCard;
+        thisPlayer.playedCardAlt = undefined;
+    }
 
+    const allPlayerPlayed = game.players
+        .filter(p => !p.isCreature)
+        .every(p => p.playedCard !== undefined);
+
+    await saveGame(game);
+    await broadcastToRoom(roomId, {
+        type: 'planningWait',
+        game,
+    })
+    if (allPlayerPlayed) {
+        if (game.state.phase === 'planning') game.state.phase = 'hunting';
+        await broadcastToRoom(roomId, {
+            type: 'cardPlayed',
+            game,
+        });
+    }
     return { statusCode: 200 };
 }
 

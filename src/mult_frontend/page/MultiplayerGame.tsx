@@ -26,7 +26,8 @@ export default function MultiplayerApp() {
       discard: [],
       isCreature: false,
       will: 0,
-      survival: [] });
+      survival: [],
+      riverActive: false });
     setStage('lobby');
   }
   function handleStartGame() {
@@ -51,9 +52,6 @@ export default function MultiplayerApp() {
 
     if (latestMessage.type === 'roomUpdate' && latestMessage.roomId === roomId) {
       setPlayers(latestMessage.players || []);
-      console.log('Updated players:', latestMessage.players);
-
-      // Also update our player if it matches by connectionId or name
       if (player) {
         const updatedPlayer = latestMessage.players.find(
           (p: Player) =>
@@ -129,13 +127,14 @@ export default function MultiplayerApp() {
 
       {stage === 'game' && (
         <>
-          {gameState && (
+          {gameState && player && (
             <GameTopBar
               turn={gameState.turn}
               phase={getPhaseNumber(gameState.phase)!}
               R_Progress={gameState.board.rescue}
               A_Progress={gameState.board.assimilation}
               players_num={players.length}
+              riverActive={player.riverActive}
             />
           )}
           <div className="text-white text-center mt-10">
@@ -145,13 +144,14 @@ export default function MultiplayerApp() {
                   <PlanningPhase
                     gameState={gameState}
                     player={player}
-                    onCardSelect={(cardId: number) => {
+                    onCardSelect={(cardId: number, cardIdAlt?: number) => {
                       if (!roomId || !player) return;
                       sendMessage({
                         type: 'playCard',
                         roomId,
                         playerId: player.id,
                         cardId,
+                        ...(cardIdAlt !== undefined && { cardIdAlt }),
                       });
                     }}
                   />

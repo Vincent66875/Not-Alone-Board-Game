@@ -64,7 +64,8 @@ export type Player = {
   isCreature: boolean;
   will: number;
   survival: string[];
-  riverActive?: boolean; 
+  riverActive: boolean;
+  playedCardAlt?: number;
 };
 
 export interface Game {
@@ -107,7 +108,7 @@ export function startGame(game: Game): Game {
     const updatedPlayer: Player = {
       ...p, // Preserve id, name, connectionId, will, survival, etc.
       will: 3,
-      isCreature: i === 0,
+      isCreature: false,
       hand: [1, 2, 3, 4, 5],
       discard: [],
       riverActive: false,
