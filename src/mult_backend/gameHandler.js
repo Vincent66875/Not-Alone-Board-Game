@@ -106,7 +106,7 @@ async function handleJoinRoom(body, connectionId) {
 
 async function handlePlayCard(body, connectionId) {
   const { roomId, player } = body;
-  const { playerId, playedCard, playedCardAlt, riverActive } = player;
+  const { id: playerId, playedCard, playedCardAlt, riverActive } = player;
 
   console.log("Incoming playCard:", JSON.stringify(body, null, 2));
 
