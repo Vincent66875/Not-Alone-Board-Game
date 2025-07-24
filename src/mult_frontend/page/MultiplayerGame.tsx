@@ -167,7 +167,7 @@ export default function MultiplayerApp() {
                         player={player}
                         onCardSelect={(cardId: number, cardIdAlt?: number) => {
                           if (!roomId || !player) return;
-                          console.log("A card/s is played");
+                          console.log("A card/s is played: " + cardId);
                           sendMessage({
                             type: 'playCard',
                             roomId,

@@ -18,7 +18,6 @@ export default function WaitingPage({ gameState, player, players }: Props) {
     : [];
 
   if (gameState.phase === 'planning') {
-    // Creature: waiting message only
     if (player.isCreature) {
       return (
         <div className="text-white text-center text-xl mt-10">
