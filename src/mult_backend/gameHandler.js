@@ -318,7 +318,7 @@ async function getGame(roomId) {
 async function saveGame(game) {
     await ddb.send(new PutCommand({
         TableName: TABLE_GAMES,
-        Item: game
+        Item: marshall(game, { removeUndefinedValues: true }),
     }));
 }
 
