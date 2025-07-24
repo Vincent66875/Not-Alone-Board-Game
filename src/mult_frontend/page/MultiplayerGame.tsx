@@ -168,10 +168,19 @@ export default function MultiplayerApp() {
                         onCardSelect={(cardId: number, cardIdAlt?: number) => {
                           if (!roomId || !player) return;
                           console.log("Player " + player.id + " played the card: " + cardId);
+                          console.log("Player message:", {
+                            ...player,
+                            playedCard: cardId,
+                            ...(cardIdAlt !== undefined && { playedCardAlt: cardIdAlt }),
+                          });
                           sendMessage({
                             type: 'playCard',
                             roomId,
-                            player,
+                            player: {
+                              ...player,
+                              playedCard: cardId,
+                              ...(cardIdAlt !== undefined && { playedCardAlt: cardIdAlt }),
+                            },
                           });
                         }}
                       />
