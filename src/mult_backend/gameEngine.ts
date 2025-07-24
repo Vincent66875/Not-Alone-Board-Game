@@ -35,6 +35,13 @@ export const allLocations: LocationCard[] = [
     'Artefact'
 ];
 
+export const tokenOrder: ('c'|'a'|'t')[] = ['c', 'a', 't'];
+
+export interface HuntedLocation {
+  cardId: number;       // location card index or ID
+  type: 'c' | 'a' | 't'; // action type: card, assimilation, token, etc.
+}
+
 
 export interface BoardState {
   player_num: number;
@@ -52,6 +59,8 @@ export interface GameState {
     beachUsed?: boolean;
     wreckUsed?: boolean;
   };
+  huntedLocations?: HuntedLocation[];
+  remainingTokens?: number;
 }
 
 export type Player = {

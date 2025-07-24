@@ -17,6 +17,7 @@ export default function WaitingPage({ gameState, player, players }: Props) {
     ? [player.playedCard]
     : [];
 
+
   if (gameState.phase === 'planning') {
     if (player.isCreature) {
       return (
@@ -48,7 +49,8 @@ export default function WaitingPage({ gameState, player, players }: Props) {
         {/* Grid with highlight for played cards */}
         <div className="grid grid-cols-5 gap-4 max-w-[35rem] mx-auto">
           {allLocations.map((locName, locId) => {
-            const isPlayed = playedCards.includes(locId);
+            const isPlayed = playedCards.some(cardId => cardId - 1 === locId);
+
             return (
               <div
                 key={locId}

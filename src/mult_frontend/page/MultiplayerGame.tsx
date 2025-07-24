@@ -47,6 +47,20 @@ export default function MultiplayerApp() {
     setPlayers([]);
     setStage('join');
   }
+  function handleHuntSelect(cardId: number, tokenType: 'c' | 'a' | 't') {
+    if (!roomId || !player) return;
+
+    console.log(`Hunt selected card ${cardId} with token type ${tokenType}`);
+
+    sendMessage({
+      type: 'huntSelect',
+      roomId,
+      playerId: player.id,
+      cardId,
+      tokenType,
+    });
+  }
+
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
     if (!latestMessage) return;
@@ -98,6 +112,26 @@ export default function MultiplayerApp() {
         console.log('Updated player info from gameUpdate:', updatedPlayer);
       } else {
         console.warn('No matching player found in gameUpdate players for', player);
+      }
+    }
+
+    if ((latestMessage.type === 'planningWait' || latestMessage.type === 'cardPlayed') && latestMessage.game) {
+      setGameState(latestMessage.game.state);
+      if (latestMessage.game.players) {
+        setPlayers(latestMessage.game.players);
+      }
+      // Update your player info in case it changed
+      if (player) {
+        const updatedPlayer = latestMessage.game.players.find(
+          (p: Player) =>
+            p.connectionId === player.connectionId ||
+            p.id === player.id ||
+            p.name === player.name
+        );
+        if (updatedPlayer) {
+          setPlayer(updatedPlayer);
+          console.log('Updated player info from planningWait/cardPlayed:', updatedPlayer);
+        }
       }
     }
   }, [messages, roomId]);
@@ -195,6 +229,7 @@ export default function MultiplayerApp() {
                         gameState={gameState}
                         player={player}
                         players={players}
+                        onHuntSelect={handleHuntSelect}
                       />
                     );
                   } else {

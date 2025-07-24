@@ -25,6 +25,8 @@ exports.handler = async (event) => {
                 return await handleJoinRoom(body, connectionId);
             case 'playCard':
                 return await handlePlayCard(body, connectionId);
+            case 'huntSelect':
+                return await handleHuntChoice(body, connectionId);
             case 'endTurn':
                 return await handleEndTurn(body, connectionId);
             case 'startGame':
@@ -184,6 +186,48 @@ async function handlePlayCard(body, connectionId) {
 
   return { statusCode: 200 };
 }
+
+async function handleHuntChoice(body, connectionId) {
+  const { roomId, player, cardId, actionType } = body;
+
+  if (!roomId || !player?.id) {
+    return { statusCode: 400, body: 'Missing roomId or player id' };
+  }
+  if (cardId === undefined || !actionType) {
+    return { statusCode: 400, body: 'Missing cardId or actionType' };
+  }
+
+  const game = await getGame(roomId);
+  if (!game) {
+    return { statusCode: 404, body: 'Game not found' };
+  }
+
+  if (!Array.isArray(game.state.huntedLocations)) {
+    game.state.huntedLocations = [];
+  }
+  if (typeof game.state.remainingTokens !== 'number') {
+    //Initialing at start
+    game.state.remainingTokens = 1;
+  }
+
+  game.state.huntedLocations.push({ cardId, type: actionType });
+
+  game.state.remainingTokens -= 1;
+
+  if (game.state.remainingTokens <= 0) {
+    game.state.phase = 'resolution';
+  }
+
+  await saveGame(game);
+
+  await broadcastToRoom(roomId, {
+    type: 'huntSelectUpdate',
+    game,
+  });
+
+  return { statusCode: 200 };
+}
+
 
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
