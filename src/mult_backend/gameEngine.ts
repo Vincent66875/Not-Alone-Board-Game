@@ -103,12 +103,12 @@ export function startGame(game: Game): Game {
 
   game.state.phase = 'planning';
   game.state.turn = 1;
-
+  const creature = Math.floor(Math.random() * game.players.length);
   game.players = game.players.map((p, i) => {
     const updatedPlayer: Player = {
-      ...p, // Preserve id, name, connectionId, will, survival, etc.
+      ...p,
       will: 3,
-      isCreature: false,
+      isCreature: i === creature,
       hand: [1, 2, 3, 4, 5],
       discard: [],
       riverActive: false,

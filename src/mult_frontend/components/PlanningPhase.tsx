@@ -9,9 +9,9 @@ type Props = {
   onCardSelect: (cardId: number, cardIdAlt?: number) => void;
 };
 
-const PlanningPhase: React.FC<Props> = ({ player, gameState, onCardSelect }) => {
+export default function PlanningPhase({ player, gameState, onCardSelect }: Props) {
   const numericHand = player.hand.map(Number);
-  const riverMode = player.riverActive
+  const riverMode = player.riverActive;
   const [selectedCardId, setSelectedCardId] = useState<number[]>([]);
 
   const toggleCard = (cardId: number) => {
@@ -100,5 +100,3 @@ const PlanningPhase: React.FC<Props> = ({ player, gameState, onCardSelect }) => 
     </div>
   );
 };
-
-export default PlanningPhase;

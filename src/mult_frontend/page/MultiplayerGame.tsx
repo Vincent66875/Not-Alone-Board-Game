@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import JoinRoom from './JoinRoom';
 import MainPage from './MainPage';
+import WaitingPage from '../components/WaitingPage';
+import HuntingPhase from '../components/HuntingPhase';
 import PlanningPhase from '../components/PlanningPhase';
 import GameTopBar from '../components/GameTopBar';
+import GameDownBar from '../components/GameDownBar';
 import { useWebSocket } from '../hooks/useWebsocket';
 import { getPhaseNumber, type GameState, type Player } from '../../mult_backend/gameEngine';
-import GameDownBar from '../components/GameDownBar';
 
 export default function MultiplayerApp() {
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -134,41 +136,82 @@ export default function MultiplayerApp() {
               R_Progress={gameState.board.rescue}
               A_Progress={gameState.board.assimilation}
               players_num={players.length}
-              riverActive={player.riverActive}
+              riverActive={player.riverActive ?? false}
             />
           )}
+
           <div className="text-white text-center mt-10">
             {gameState && player ? (
-              <>
-                {gameState.phase === 'planning' ? (
-                  <PlanningPhase
-                    gameState={gameState}
-                    player={player}
-                    onCardSelect={(cardId: number, cardIdAlt?: number) => {
-                      if (!roomId || !player) return;
-                      sendMessage({
-                        type: 'playCard',
-                        roomId,
-                        playerId: player.id,
-                        cardId,
-                        ...(cardIdAlt !== undefined && { cardIdAlt }),
-                      });
-                    }}
-                  />
-                ) : (
-                  <h2>Phase: {gameState.phase}</h2>
-                )}
-              </>
+              (() => {
+                const { phase } = gameState;
+
+                if (phase === 'planning') {
+                  if (player.isCreature) {
+                    return (
+                      <WaitingPage
+                        gameState={gameState}
+                        player={player}
+                        players={players}
+                      />
+                    );
+                  } else {
+                    return player.playedCard !== undefined ? (
+                      <WaitingPage
+                        gameState={gameState}
+                        player={player}
+                        players={players}
+                      />
+                    ) : (
+                      <PlanningPhase
+                        gameState={gameState}
+                        player={player}
+                        onCardSelect={(cardId: number, cardIdAlt?: number) => {
+                          if (!roomId || !player) return;
+                          console.log("A card/s is played");
+                          sendMessage({
+                            type: 'playCard',
+                            roomId,
+                            playerId: player.id,
+                            cardId,
+                            ...(cardIdAlt !== undefined && { cardIdAlt }),
+                          });
+                        }}
+                      />
+                    );
+                  }
+                }
+
+                if (phase === 'hunting') {
+                  if (player.isCreature) {
+                    return (
+                      <HuntingPhase
+                        gameState={gameState}
+                        player={player}
+                        players={players}
+                      />
+                    );
+                  } else {
+                    return (
+                      <WaitingPage
+                        gameState={gameState}
+                        player={player}
+                        players={players}
+                      />
+                    );
+                  }
+                }
+
+                return <h2>Phase: {phase}</h2>;
+              })()
             ) : (
               <h2>Waiting for game data...</h2>
             )}
-          {gameState && (
-            <GameDownBar
-              players={players}
-            />
-          )}
+
+
+            {gameState && <GameDownBar players={players} />}
           </div>
         </>
+
       )}
     </>
   );

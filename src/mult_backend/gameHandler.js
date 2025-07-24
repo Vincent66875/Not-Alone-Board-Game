@@ -122,9 +122,6 @@ async function handlePlayCard(body, connectionId) {
         thisPlayer.playedCard = playedCard;
         thisPlayer.playedCardAlt = playedCardAlt;
     } else {
-        if (!playedCard) {
-        return { statusCode: 400, body: 'Missing cardId' };
-        }
         thisPlayer.playedCard = playedCard;
         thisPlayer.playedCardAlt = undefined;
     }
@@ -138,8 +135,9 @@ async function handlePlayCard(body, connectionId) {
         type: 'planningWait',
         game,
     })
-    if (allPlayerPlayed) {
-        if (game.state.phase === 'planning') game.state.phase = 'hunting';
+    if (allPlayerPlayed && game.state.phase === 'planning') {
+        game.state.phase = 'hunting';
+        await saveGame(game);
         await broadcastToRoom(roomId, {
             type: 'cardPlayed',
             game,
