@@ -106,15 +106,20 @@ async function handleJoinRoom(body, connectionId) {
 
 async function handlePlayCard(body, connectionId) {
   const { roomId, player } = body;
-  const { id: playerId, playedCard, playedCardAlt, riverActive } = player;
 
   console.log("Incoming playCard:", JSON.stringify(body, null, 2));
 
-  if (!roomId || !playerId) {
-    console.log("Missing roomId or playerId");
-    return { statusCode: 400, body: 'Missing roomId or playerId' };
+  if (!roomId || !player) {
+    console.log("Missing roomId or player object");
+    return { statusCode: 400, body: 'Missing roomId or player' };
   }
 
+  const { id: playerId, playedCard, playedCardAlt, riverActive } = player;
+
+  if (!playerId) {
+    console.log("Missing playerId");
+    return { statusCode: 400, body: 'Missing playerId' };
+  }
   if (!playedCard) {
     console.log("Missing cardId");
     return { statusCode: 400, body: 'Missing cardId' };
