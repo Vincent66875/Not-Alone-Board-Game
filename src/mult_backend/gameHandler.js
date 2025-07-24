@@ -149,7 +149,7 @@ async function handlePlayCard(body, connectionId) {
     thisPlayer.playedCardAlt = playedCardAlt;
   } else {
     thisPlayer.playedCard = playedCard;
-    thisPlayer.playedCardAlt = undefined;
+    delete thisPlayer.playedCardAlt;
   }
 
   console.log(`Player ${playerId} played:`, {
