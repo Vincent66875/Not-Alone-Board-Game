@@ -38,10 +38,9 @@ export const allLocations: LocationCard[] = [
 export const tokenOrder: ('c'|'a'|'t')[] = ['c', 'a', 't'];
 
 export interface HuntedLocation {
-  cardId: number;       // location card index or ID
+  cardId: number; // location card index or ID
   type: 'c' | 'a' | 't'; // action type: card, assimilation, token, etc.
 }
-
 
 export interface BoardState {
   player_num: number;
@@ -134,7 +133,6 @@ export function startGame(game: Game): Game {
   console.log("Game started! Player list:", game.players);
   return game;
 }
-
 
 export function handlePlayCard(
   game: GameState,

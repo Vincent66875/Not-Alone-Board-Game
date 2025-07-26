@@ -55,13 +55,14 @@ exports.handler = async (event) => {
 
     game.players = game.players.filter(player => player.connectionId != connectionId);
 
-    if(game.players.length === 0){
+    if (game.state.phase !== 'lobby') {
       await ddbDocClient.send(new DeleteCommand({
         TableName: TABLE_GAMES,
-        Key: {roomId}
+        Key: { roomId }
       }));
-      console.log(`Deleted game ${roomId} because no players left`);
-    }else{
+      console.log(`Deleted game ${roomId} due to player disconnect during active game`);
+    } else {
+      game.players = game.players.filter(player => player.connectionId !== connectionId);
       await ddbDocClient.send(new PutCommand({
         TableName: TABLE_GAMES,
         Item: game

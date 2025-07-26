@@ -324,7 +324,7 @@ async function handleLeaveGame(body, connectionId) {
             type: 'roomUpdate',
             players: game.players,
             readyToStart: game.players.length>=1,
-        }); 
+        });
     }
     await removeConnection(connectionId);
 

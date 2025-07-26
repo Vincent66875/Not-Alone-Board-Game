@@ -11,50 +11,89 @@ type Props = {
 
 export default function HuntingPhase({ player, gameState, players, onHuntSelect }: Props) {
   const isCreature = player.isCreature;
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [previewCardId, setPreviewCardId] = useState<number | null>(null);
 
-  // Token order: creature, assimilation, target
   const tokenOrder: ('c' | 'a' | 't')[] = ['c', 'a', 't'];
+  const currentTokenIndex = gameState.huntedLocations?.length ?? 0;
+  const currentTokenType = tokenOrder[currentTokenIndex];
 
-  // Determine which token to place now based on huntedLocations length
-  const placedTokens = gameState.huntedLocations?.length ?? 0;
-  const currentTokenType = tokenOrder[placedTokens] ?? 'c'; // fallback 'c' if out of bounds
+  const remainingTokens = 3 - currentTokenIndex;
 
-  const survivorsWithPlayedCards = players.filter(p => !p.isCreature && p.playedCard !== undefined);
+  function handleCardClick(cardId: number) {
+    if (!isCreature || currentTokenIndex >= tokenOrder.length) return;
+    setPreviewCardId(cardId);
+  }
 
-  function handleHuntSelect(cardId: number) {
-    if (!isCreature) return;
-    setSelectedLocation(cardId);
-    onHuntSelect(cardId, currentTokenType);
+  function handleConfirm() {
+    if (previewCardId === null) return;
+    onHuntSelect(previewCardId, currentTokenType);
+    setPreviewCardId(null); // Reset after confirming
   }
 
   return (
     <div className="flex flex-col items-center mt-4 text-white">
       <h2 className="text-2xl font-semibold mb-6">Hunting Phase</h2>
-      <p className="mb-4 text-lg">
+      <p className="mb-2 text-lg">
         {isCreature
-          ? `Choose location for token "${currentTokenType.toUpperCase()}".`
-          : 'Wait for the creature to make a move.'}
+          ? `Choose a location for token '${currentTokenType.toUpperCase()}'`
+          : 'Wait for the Creature to make their move.'}
       </p>
+      {isCreature && (
+        <p className="text-sm text-gray-300 mb-4">
+          Remaining tokens: {remainingTokens}
+        </p>
+      )}
 
-      <div className="grid grid-cols-4 gap-6">
-        {survivorsWithPlayedCards.map(p => {
-          const cardIndex = (p.playedCard ?? 1) - 1;
-          const isSelected = selectedLocation === p.playedCard;
+      {/* Preview selected card */}
+      {isCreature && previewCardId !== null && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex flex-col items-center justify-center">
+          <div className="flex gap-6 mb-6">
+          <img
+              src={`/cards/${allLocations[previewCardId - 1]}.png`}
+              alt="Selected"
+              className="w-52 h-auto shadow-lg rounded-lg"
+          />
+          </div>
+          <div className="text-white text-lg mb-4">
+          Confirm token <strong>{currentTokenType.toUpperCase()}</strong> at location{' '}
+          <strong>{previewCardId}</strong>?
+          </div>
+          <div className="flex gap-6">
+          <button
+              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              onClick={handleConfirm}
+          >
+              Confirm
+          </button>
+          <button
+              className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              onClick={() => setPreviewCardId(null)}
+          >
+              Cancel
+          </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grid of location cards */}
+      <div className="grid grid-cols-5 gap-6">
+        {Array.from({ length: 10 }, (_, i) => {
+          const cardId = i + 1;
+          const isSelected = previewCardId === cardId;
 
           return (
             <div
-              key={p.id}
-              className={`flex flex-col items-center bg-gray-800 p-4 rounded-xl shadow-lg cursor-pointer ${
-                isSelected ? 'border-4 border-yellow-400' : ''
+              key={cardId}
+              className={`flex flex-col items-center bg-gray-800 p-4 rounded-xl shadow-lg cursor-pointer transition-transform duration-150 ${
+                isSelected ? 'border-4 border-yellow-400 scale-105' : 'hover:scale-105'
               }`}
-              onClick={() => handleHuntSelect(p.playedCard!)}
+              onClick={() => handleCardClick(cardId)}
             >
-              <div className="text-sm mb-2">{p.name}</div>
+              <div className="text-sm mb-2">Location {cardId}</div>
               <img
-                src={`/cards/${allLocations[cardIndex]}.png`}
-                alt={`Card ${p.playedCard}`}
-                className="w-28 h-auto rounded"
+                src={`/cards/${allLocations[i]}.png`}
+                alt={`Card ${cardId}`}
+                className="w-24 h-auto rounded"
               />
             </div>
           );

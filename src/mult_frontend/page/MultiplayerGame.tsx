@@ -4,17 +4,19 @@ import MainPage from './MainPage';
 import WaitingPage from '../components/WaitingPage';
 import HuntingPhase from '../components/HuntingPhase';
 import PlanningPhase from '../components/PlanningPhase';
+import ResolutionPage from '../components/ResolutionPage';
 import GameTopBar from '../components/GameTopBar';
 import GameDownBar from '../components/GameDownBar';
 import { useWebSocket } from '../hooks/useWebsocket';
-import { getPhaseNumber, type GameState, type Player } from '../../mult_backend/gameEngine';
+import { getPhaseNumber } from '../../mult_backend/gameEngine';
+import type { Player, GameState } from '../../mult_backend/gameEngine';
 
 export default function MultiplayerApp() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [stage, setStage] = useState<'join' | 'lobby' | 'game'>('join');
+  const [stage, setStage] = useState<'join' | 'lobby' | 'game' >('join');
 
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
 
@@ -58,6 +60,17 @@ export default function MultiplayerApp() {
       playerId: player.id,
       cardId,
       tokenType,
+    });
+  }
+  function handleResolution() {
+    if (!roomId || !player) return;
+
+    console.log('Sending resolutionComplete message');
+
+    sendMessage({
+      type: 'resolutionComplete',
+      roomId,
+      playerId: player.id,
     });
   }
 
@@ -115,25 +128,18 @@ export default function MultiplayerApp() {
       }
     }
 
-    if ((latestMessage.type === 'planningWait' || latestMessage.type === 'cardPlayed') && latestMessage.game) {
+    if (
+      (latestMessage.type === 'planningWait' ||
+        latestMessage.type === 'cardPlayed' ||
+        latestMessage.type === 'huntSelectUpdate') &&
+      latestMessage.game
+    ) {
       setGameState(latestMessage.game.state);
       if (latestMessage.game.players) {
         setPlayers(latestMessage.game.players);
       }
-      // Update your player info in case it changed
-      if (player) {
-        const updatedPlayer = latestMessage.game.players.find(
-          (p: Player) =>
-            p.connectionId === player.connectionId ||
-            p.id === player.id ||
-            p.name === player.name
-        );
-        if (updatedPlayer) {
-          setPlayer(updatedPlayer);
-          console.log('Updated player info from planningWait/cardPlayed:', updatedPlayer);
-        }
-      }
     }
+
   }, [messages, roomId]);
 
 
@@ -243,13 +249,30 @@ export default function MultiplayerApp() {
                   }
                 }
 
-                return <h2>Phase: {phase}</h2>;
+                if (phase === 'resolution') {
+                  if (player.isCreature) {
+                    return (
+                      <WaitingPage
+                        gameState={gameState}
+                        player={player}
+                        players={players}
+                      />
+                    );
+                  } else {
+                    return (
+                      <ResolutionPage
+                        gameState={gameState}
+                        player={player}
+                        players={players}
+                        onContinue={handleResolution}
+                      />
+                    );
+                  }
+                }
               })()
             ) : (
               <h2>Waiting for game data...</h2>
             )}
-
-
             {gameState && <GameDownBar players={players} />}
           </div>
         </>
