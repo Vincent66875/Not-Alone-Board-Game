@@ -95,40 +95,62 @@ export default function MultiplayerApp() {
       playerId: player.id,
     });
   }
+  function handleActivateCard(cardId: number) {
+    if (!roomId || !player) return;
+
+    console.log(`Activating card ${cardId}`);
+
+    sendMessage({
+      type: 'activateCard',
+      roomId,
+      player: { id: player.id },
+      cardId,
+    });
+  }
 
   useEffect(() => {
-  const latestMessage = messages[messages.length - 1];
-  if (!latestMessage) return;
-  console.log("Received: ", latestMessage);
-  switch (latestMessage.type) {
-    case 'gameUpdate':
-      if (latestMessage.game) {
-        updateFromGame(latestMessage.game);
-      }
-      if (latestMessage.players) {
-        setPlayers(latestMessage.players);
-      }
-      if (latestMessage.readyToStart !== undefined) {
-        setReadyToStart(latestMessage.readyToStart);
-      }
-      if (latestMessage.stage) {
-        setStage(latestMessage.stage); // ✅ now correctly update the stage
-        console.log('Stage updated to:', latestMessage.stage);
-      }
-      break;
+    const latestMessage = messages[messages.length - 1];
+    if (!latestMessage) return;
+    console.log("Received: ", latestMessage);
+    switch (latestMessage.type) {
+      case 'roomUpdate':
+        console.log("debug message: roomUpdate, readyToStart:", latestMessage.readyToStart);
+        if (latestMessage.players) {
+          setPlayers(latestMessage.players);
+        }
+        if (latestMessage.readyToStart !== undefined) {
+          setReadyToStart(latestMessage.readyToStart);
+        }
+        break;
+      case 'gameUpdate':
+        console.log("debug message: updating: ", latestMessage.readyToStart, latestMessage.stage);
+        if (latestMessage.game) {
+          updateFromGame(latestMessage.game);
+        }
+        if (latestMessage.players) {
+          setPlayers(latestMessage.players);
+        }
+        if (latestMessage.readyToStart !== undefined) {
+          setReadyToStart(latestMessage.readyToStart);
+        }
+        if (latestMessage.stage) {
+          setStage(latestMessage.stage);
+          console.log('Stage updated to:', latestMessage.stage);
+        }
+        break;
 
-    case 'planningWait':
-    case 'cardPlayed':
-    case 'huntSelectUpdate':
-      if (latestMessage.game?.state && latestMessage.game?.players) {
-        updateFromGame(latestMessage.game);
-      }
-      break;
+      case 'planningWait':
+      case 'cardPlayed':
+      case 'huntSelectUpdate':
+        if (latestMessage.game?.state && latestMessage.game?.players) {
+          updateFromGame(latestMessage.game);
+        }
+        break;
 
-    default:
-      break;
-  }
-}, [messages, roomId]);
+      default:
+        break;
+    }
+  }, [messages, roomId]);
 
   return (
     <>
@@ -253,6 +275,7 @@ export default function MultiplayerApp() {
                         player={player}
                         players={players}
                         onContinue={handleResolution}
+                        onActivateCard={handleActivateCard}
                       />
                     );
                   }

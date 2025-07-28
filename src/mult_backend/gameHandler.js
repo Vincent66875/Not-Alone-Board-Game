@@ -27,6 +27,8 @@ exports.handler = async (event) => {
                 return await handlePlayCard(body, connectionId);
             case 'huntSelect':
                 return await handleHuntChoice(body, connectionId);
+            case 'activateCard':
+                return await handleActivate(body, connectionId);
             case 'endTurn':
                 return await handleEndTurn(body, connectionId);
             case 'startGame':
@@ -113,7 +115,7 @@ async function handlePlayCard(body, connectionId) {
     return { statusCode: 400, body: 'Missing cardId' };
   }
 
-  //Load game
+  //Load game 
   const game = await getGame(roomId);
   if (!game) {
     console.log("Game not found for roomId:", roomId);
@@ -127,7 +129,7 @@ async function handlePlayCard(body, connectionId) {
     return { statusCode: 404, body: 'Player not found in game' };
   }
 
-  // Update player's playedCard
+  // Update player's playedCard 
   if (riverActive) {
     if (!playedCardAlt) {
       console.log("River active but missing alt card");
@@ -275,6 +277,35 @@ async function handleStartGame(body, connectionId) {
     await debugBroadcast(roomId, 'Error saving/broadcasting gameUpdate: ' + err.message);
     return { statusCode: 500, body: 'Save failed' };
   }
+
+  return { statusCode: 200 };
+}
+
+async function handleActivate(body, connectionId) {
+  const { roomId, player, cardId } = body;
+  if (!roomId || !player?.id || cardId === undefined) {
+    return { statusCode: 400, body: 'Missing parameters' };
+  }
+  const game = await getGame(roomId);
+  if (!game) {
+    return { statusCode: 404, body: 'Game not found' };
+  }
+  const thisPlayer = game.players.find(p => p.id === player.id);
+  if (!thisPlayer) {
+    return { statusCode: 404, body: 'Player not found' };
+  }
+
+  // Use your imported gameEngine function handlePlayCard to update state
+  const updatedState = handlePlayCard(game.state, thisPlayer, cardId);
+
+  game.state = updatedState;
+
+  await saveGame(game);
+
+  await broadcastToRoom(roomId, {
+    type: 'gameUpdate',
+    game,
+  });
 
   return { statusCode: 200 };
 }
