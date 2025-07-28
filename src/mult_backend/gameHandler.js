@@ -174,17 +174,22 @@ async function handlePlayCard(body, connectionId) {
 }
 
 async function handleHuntChoice(body, connectionId) {
+  console.log('handleHuntChoice called with body:', body);
+
   const { roomId, player, cardId, tokenType } = body;
 
   if (!roomId || !player?.id) {
+    console.log('Missing roomId or player id');
     return { statusCode: 400, body: 'Missing roomId or player id' };
   }
   if (cardId === undefined || !tokenType) {
+    console.log('Missing cardId or tokenType');
     return { statusCode: 400, body: 'Missing cardId or tokenType' };
   }
 
   const game = await getGame(roomId);
   if (!game) {
+    console.log('Game not found for room:', roomId);
     return { statusCode: 404, body: 'Game not found' };
   }
 
@@ -201,14 +206,17 @@ async function handleHuntChoice(body, connectionId) {
   }
 
   await saveGame(game);
+  console.log(`Saved game after hunt choice, remainingTokens now: ${game.state.remainingTokens}`);
 
   await broadcastToRoom(roomId, {
     type: 'huntSelectUpdate',
     game,
   });
+  console.log('Broadcasted huntSelectUpdate');
 
   return { statusCode: 200 };
 }
+
 
 
 async function handleStartGame(body, connectionId) {
