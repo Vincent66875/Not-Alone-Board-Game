@@ -99,19 +99,21 @@ export default function MultiplayerApp() {
   useEffect(() => {
   const latestMessage = messages[messages.length - 1];
   if (!latestMessage) return;
-
+  console.log("Received: ", latestMessage);
   switch (latestMessage.type) {
-    case 'roomUpdate':
-      if (latestMessage.game?.state && latestMessage.game?.players) {
+    case 'gameUpdate':
+      if (latestMessage.game) {
         updateFromGame(latestMessage.game);
       }
-      setReadyToStart(latestMessage.readyToStart);
-      break;
-
-    case 'gameUpdate':
-      if (latestMessage.gameState && latestMessage.players) {
-        updateFromGame(latestMessage.game);
-        setStage('game');
+      if (latestMessage.players) {
+        setPlayers(latestMessage.players);
+      }
+      if (latestMessage.readyToStart !== undefined) {
+        setReadyToStart(latestMessage.readyToStart);
+      }
+      if (latestMessage.stage) {
+        setStage(latestMessage.stage); // ✅ now correctly update the stage
+        console.log('Stage updated to:', latestMessage.stage);
       }
       break;
 
@@ -127,8 +129,6 @@ export default function MultiplayerApp() {
       break;
   }
 }, [messages, roomId]);
-
-
 
   return (
     <>

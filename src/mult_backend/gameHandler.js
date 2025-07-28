@@ -113,14 +113,14 @@ async function handlePlayCard(body, connectionId) {
     return { statusCode: 400, body: 'Missing cardId' };
   }
 
-  // ✅ Load game
+  //Load game
   const game = await getGame(roomId);
   if (!game) {
     console.log("Game not found for roomId:", roomId);
     return { statusCode: 404, body: 'Game not found' };
   }
 
-  // ✅ Find the player in game
+  //Find the player in game
   const thisPlayer = game.players.find(p => p.id === playerId);
   if (!thisPlayer) {
     console.log("Player not found in game:", playerId);
@@ -168,7 +168,7 @@ async function handlePlayCard(body, connectionId) {
       type: 'cardPlayed',
       game,
     });
-  }
+  } 
 
   return { statusCode: 200 };
 }
@@ -216,8 +216,6 @@ async function handleHuntChoice(body, connectionId) {
   return { statusCode: 200 };
 }
 
-
-
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
 
@@ -253,8 +251,10 @@ async function handleStartGame(body, connectionId) {
 
   try {
     await saveGame(updatedGame);
+    
     await broadcastToRoom(roomId, {
-      type: 'roomUpdate',
+      type: 'gameUpdate',
+      game: updatedGame,
       players: updatedGame.players.map(p => ({
         id: p.id,
         name: p.name,
@@ -267,21 +267,13 @@ async function handleStartGame(body, connectionId) {
         riverActive: p.riverActive,
       })),
       readyToStart: true,
+      stage: 'game',
     });
-    await debugBroadcast(roomId, 'Broadcasted roomUpdate');
-  } catch (err) {
-    await debugBroadcast(roomId, 'Error saving/broadcasting roomUpdate: ' + err.message);
-    return { statusCode: 500, body: 'Save failed' };
-  }
 
-  try {
-    await broadcastToRoom(roomId, {
-      type: 'gameUpdate',
-      game,
-    });
     await debugBroadcast(roomId, 'Broadcasted gameUpdate');
   } catch (err) {
-    await debugBroadcast(roomId, 'Broadcast error: ' + err.message);
+    await debugBroadcast(roomId, 'Error saving/broadcasting gameUpdate: ' + err.message);
+    return { statusCode: 500, body: 'Save failed' };
   }
 
   return { statusCode: 200 };

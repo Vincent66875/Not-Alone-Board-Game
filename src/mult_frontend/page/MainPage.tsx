@@ -8,8 +8,8 @@ interface MainPageProps {
 }
 
 export default function MainPage({ roomId, playerName, players, readyToStart, onStart, onLeave }: MainPageProps) {
-  console.log("ready to start?", readyToStart);
-  console.log("Player numbers: ", players.length);
+  // console.log("ready to start?", readyToStart);
+  // console.log("Player numbers: ", players.length);
   return (
     <div className="bg-black bg-opacity-60 rounded-lg p-6 flex flex-col items-center text-red-300 shadow-lg">
       <h1 className="text-3xl font-bold mb-4">Room: {roomId}</h1>
