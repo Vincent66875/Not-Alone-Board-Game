@@ -86,7 +86,7 @@ async function handleJoinRoom(body, connectionId) {
             survival: p.survival,
             riverActive: p.riverActive,
         })),
-        readyToStart: game.players.length >= 1,
+        readyToStart: game.players.length >= 3,
     });
 
     return { statusCode: 200 };
