@@ -276,12 +276,6 @@ async function handleStartGame(body, connectionId) {
 
   try {
     await broadcastToRoom(roomId, {
-      type: 'stageUpdate',
-      stage: 'game',
-    });
-    await debugBroadcast(roomId, 'Broadcasted stageUpdate');
-
-    await broadcastToRoom(roomId, {
       type: 'gameUpdate',
       game,
     });
@@ -310,7 +304,7 @@ async function handleLeaveGame(body, connectionId) {
         await saveGame(game);
         await broadcastToRoom(roomId, {
             type: 'roomUpdate',
-            players: game.players,
+            game,
             readyToStart: game.players.length>=3,
         });
     }

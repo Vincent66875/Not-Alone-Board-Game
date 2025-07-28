@@ -59,6 +59,7 @@ export default function MultiplayerApp() {
   function handleStartGame() {
     sendMessage({"type": 'startGame', roomId});
     console.log("Sending: start room: " + roomId);
+    // setStage('game');
   }
   function handleLeaveGame() {
     console.log("Sending: leave room: " + roomId);
@@ -107,15 +108,10 @@ export default function MultiplayerApp() {
       setReadyToStart(latestMessage.readyToStart);
       break;
 
-    case 'stageUpdate':
-      if (latestMessage.stage === 'game') {
-        setStage('game');
-      }
-      break;
-
     case 'gameUpdate':
       if (latestMessage.gameState && latestMessage.players) {
         updateFromGame(latestMessage.game);
+        setStage('game');
       }
       break;
 
