@@ -174,13 +174,13 @@ async function handlePlayCard(body, connectionId) {
 }
 
 async function handleHuntChoice(body, connectionId) {
-  const { roomId, player, cardId, actionType } = body;
+  const { roomId, player, cardId, tokenType } = body;
 
   if (!roomId || !player?.id) {
     return { statusCode: 400, body: 'Missing roomId or player id' };
   }
-  if (cardId === undefined || !actionType) {
-    return { statusCode: 400, body: 'Missing cardId or actionType' };
+  if (cardId === undefined || !tokenType) {
+    return { statusCode: 400, body: 'Missing cardId or tokenType' };
   }
 
   const game = await getGame(roomId);
@@ -192,7 +192,7 @@ async function handleHuntChoice(body, connectionId) {
     game.state.huntedLocations = [];
   }
 
-  game.state.huntedLocations.push({ cardId, type: actionType });
+  game.state.huntedLocations.push({ cardId, type: tokenType });
 
   game.state.remainingTokens -= 1;
 
