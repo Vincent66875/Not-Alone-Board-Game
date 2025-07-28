@@ -8,7 +8,7 @@ const {v4: uuidv4} = require('uuid');
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-const { startGame } = require('./gameEngine');
+const { startGame, initializeGame } = require('./gameEngine');
 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
@@ -52,21 +52,7 @@ async function handleJoinRoom(body, connectionId) {
     const playerId = uuidv4();
 
     if (!game) {
-        game = {
-            roomId,
-            players: [],
-            state: {
-                phase: 'lobby',
-                turn: 0,
-                board: {
-                    rescue: 0,
-                    assimilation: 0,
-                },
-                history: [],
-            },
-            host: connectionId,
-            createdAt: new Date().toISOString(),
-        };
+        game = initializeGame(roomId, []);
     }
 
     const alreadyJoined = game.players.some(p => p.connectionId === connectionId);

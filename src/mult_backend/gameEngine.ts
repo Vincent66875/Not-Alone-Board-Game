@@ -140,7 +140,6 @@ export function handlePlayCard(
   player: Player,
   cardId: number
 ): GameState {
-  // will checks
   if (!player.hand.includes(cardId)) {
     console.warn(`Player ${player.id} tried to play card ${cardId} not in hand.`);
     return game;

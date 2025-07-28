@@ -110,8 +110,6 @@ export default function MultiplayerApp() {
       }
 
       if (!player) return;
-
-      // Find updated player from separate players array, NOT inside gameState
       let updatedPlayer = latestMessage.players.find(
         (p: Player) => p.connectionId === player.connectionId
       ) || latestMessage.players.find(
@@ -128,12 +126,18 @@ export default function MultiplayerApp() {
       }
     }
 
-    if (
-      (latestMessage.type === 'planningWait' ||
-        latestMessage.type === 'cardPlayed' ||
-        latestMessage.type === 'huntSelectUpdate') &&
-      latestMessage.game
+    if (latestMessage.type === 'planningWait' ||
+      latestMessage.type === 'cardPlayed'
     ) {
+      console.log(latestMessage.type);
+      setGameState(latestMessage.game.state);
+      if (latestMessage.game.players) {
+        setPlayers(latestMessage.game.players);
+      }
+    }
+
+    if (latestMessage.type === 'huntSelectUpdate'){
+      console.log("Creature hunted a location");
       setGameState(latestMessage.game.state);
       if (latestMessage.game.players) {
         setPlayers(latestMessage.game.players);

@@ -13,19 +13,20 @@ export default function HuntingPhase({ player, gameState, players, onHuntSelect 
   const isCreature = player.isCreature;
   const [previewCardId, setPreviewCardId] = useState<number | null>(null);
 
-  const tokenOrder: ('c' | 'a' | 't')[] = ['c', 'a', 't'];
-  const currentTokenIndex = gameState.huntedLocations?.length ?? 0;
-  const currentTokenType = tokenOrder[currentTokenIndex];
-
-  const remainingTokens = 3 - currentTokenIndex;
-
+  const tokenOrder: ('t' | 'a' | 'c')[] = ['t', 'a', 'c'];
+  const remainingTokens = gameState.remainingTokens;
+  const currentTokenType = remainingTokens > 0
+  ? tokenOrder[3 - remainingTokens]
+  : null;
+  console.log("remaining: " + remainingTokens);
+  
   function handleCardClick(cardId: number) {
-    if (!isCreature || currentTokenIndex >= tokenOrder.length) return;
+    if (!isCreature || remainingTokens === 0 || currentTokenType === null) return;
     setPreviewCardId(cardId);
   }
 
   function handleConfirm() {
-    if (previewCardId === null) return;
+    if (previewCardId === null || currentTokenType === null) return;
     onHuntSelect(previewCardId, currentTokenType);
     setPreviewCardId(null); // Reset after confirming
   }
@@ -34,9 +35,15 @@ export default function HuntingPhase({ player, gameState, players, onHuntSelect 
     <div className="flex flex-col items-center mt-4 text-white">
       <h2 className="text-2xl font-semibold mb-6">Hunting Phase</h2>
       <p className="mb-2 text-lg">
-        {isCreature
-          ? `Choose a location for token '${currentTokenType.toUpperCase()}'`
-          : 'Wait for the Creature to make their move.'}
+        {isCreature ? (
+          currentTokenType !== null ? (
+            `Choose a location for token '${currentTokenType.toUpperCase()}'`
+          ) : (
+            'No tokens remaining.Yo'
+          )
+        ) : (
+          'Wait for the Creature to make their move.'
+        )}
       </p>
       {isCreature && (
         <p className="text-sm text-gray-300 mb-4">
@@ -45,32 +52,32 @@ export default function HuntingPhase({ player, gameState, players, onHuntSelect 
       )}
 
       {/* Preview selected card */}
-      {isCreature && previewCardId !== null && (
+      {isCreature && previewCardId !== null && currentTokenType !== null && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex flex-col items-center justify-center">
           <div className="flex gap-6 mb-6">
-          <img
+            <img
               src={`/cards/${allLocations[previewCardId - 1]}.png`}
               alt="Selected"
               className="w-52 h-auto shadow-lg rounded-lg"
-          />
+            />
           </div>
           <div className="text-white text-lg mb-4">
-          Confirm token <strong>{currentTokenType.toUpperCase()}</strong> at location{' '}
-          <strong>{previewCardId}</strong>?
+            Confirm token <strong>{currentTokenType.toUpperCase()}</strong> at location{' '}
+            <strong>{previewCardId}</strong>?
           </div>
           <div className="flex gap-6">
-          <button
+            <button
               className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               onClick={handleConfirm}
-          >
+            >
               Confirm
-          </button>
-          <button
+            </button>
+            <button
               className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               onClick={() => setPreviewCardId(null)}
-          >
+            >
               Cancel
-          </button>
+            </button>
           </div>
         </div>
       )}
