@@ -143,7 +143,7 @@ export function handleActivateCard(
   const updatedGame = { ...game };
   const playerIndex = updatedGame.players.findIndex(p => p.id === pid);
 
-const player = { ...updatedGame.players[playerIndex] };
+  const player = { ...updatedGame.players[playerIndex] };
 
   if (!player) {
     console.warn(`Player ${pid} not found in game.`);

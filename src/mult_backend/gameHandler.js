@@ -286,23 +286,28 @@ async function handleActivate(body, connectionId) {
   if (!roomId || !player?.id || cardId === undefined) {
     return { statusCode: 400, body: 'Missing parameters' };
   }
+
   const game = await getGame(roomId);
   if (!game) {
     return { statusCode: 404, body: 'Game not found' };
   }
+
+  if (!game.players) {
+    return { statusCode: 404, body: 'Players not available' };
+  }
+
   const thisPlayer = game.players.find(p => p.id === player.id);
   if (!thisPlayer) {
     return { statusCode: 404, body: 'Player not found' };
   }
 
-  // Use your imported gameEngine function handleActivateCard to update state
-  const updatedState = handleActivateCard(game.state, thisPlayer.id, cardId);
+  const updatedGame = handleActivateCard(game, thisPlayer.id, cardId);
 
-  await saveGame(updatedState);
+  await saveGame(updatedGame);
 
   await broadcastToRoom(roomId, {
     type: 'gameUpdate',
-    game,
+    game: updatedGame,
   });
 
   return { statusCode: 200 };
