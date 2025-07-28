@@ -296,11 +296,9 @@ async function handleActivate(body, connectionId) {
   }
 
   // Use your imported gameEngine function handlePlayCard to update state
-  const updatedState = handlePlayCard(game.state, thisPlayer, cardId);
+  const updatedState = handlePlayCard(game.state, thisPlayer.id, cardId);
 
-  game.state = updatedState;
-
-  await saveGame(game);
+  await saveGame(updatedState);
 
   await broadcastToRoom(roomId, {
     type: 'gameUpdate',

@@ -43,6 +43,10 @@ export default function ResolutionPage({
     }
   }
 
+  function cancelActivation() {
+    setSelectedCard(null);
+  }
+
   return (
     <div className="flex flex-col items-center mt-4 text-white">
       <h2 className="text-2xl font-semibold mb-6">Resolution Phase</h2>
@@ -55,7 +59,6 @@ export default function ResolutionPage({
           const tokenType = huntedMap.get(cardId);
           const isPlayed = playedCardId === cardId || altCardId === cardId;
           const isSafe = isPlayed && !isHunted;
-          const isActivatable = isCardActivatable(cardId);
 
           return (
             <div
@@ -87,26 +90,6 @@ export default function ResolutionPage({
         })}
       </div>
 
-      {selectedCard !== null && (
-        <div className="mt-6 bg-gray-800 p-4 rounded-lg flex flex-col items-center">
-          <p className="mb-4 text-lg">Activate Location {selectedCard}?</p>
-          <div className="flex gap-4">
-            <button
-              onClick={confirmActivation}
-              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold"
-            >
-              Confirm
-            </button>
-            <button
-              onClick={() => setSelectedCard(null)}
-              className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
       {!playedCardId && (
         <p className="text-yellow-300 mt-6">You didn’t play a card this turn.</p>
       )}
@@ -119,6 +102,33 @@ export default function ResolutionPage({
           Continue
         </button>
       ) : null}
+
+      {/* ✅ Activation Modal */}
+      {selectedCard !== null && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex flex-col items-center justify-center">
+          <div className="flex gap-6 mb-6">
+            <img
+              src={`/cards/${allLocations[selectedCard - 1]}.png`}
+              alt="Selected"
+              className="w-52 h-auto shadow-lg rounded-lg"
+            />
+          </div>
+          <div className="flex gap-6">
+            <button
+              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              onClick={confirmActivation}
+            >
+              Activate
+            </button>
+            <button
+              className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              onClick={cancelActivation}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

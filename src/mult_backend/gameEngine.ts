@@ -136,10 +136,17 @@ export function startGame(game: Game): Game {
 }
 
 export function handlePlayCard(
-  game: GameState,
-  player: Player,
+  game: Game,
+  pid: string,
   cardId: number
-): GameState {
+): Game {
+  const updatedGame = { ...game };
+  const player = updatedGame.players.find(p => p.id === pid);
+
+  if (!player) {
+    console.warn(`Player ${pid} not found in game.`);
+    return game;
+  }
   if (!player.hand.includes(cardId)) {
     console.warn(`Player ${player.id} tried to play card ${cardId} not in hand.`);
     return game;
@@ -174,16 +181,16 @@ export function handlePlayCard(
       break;
 
     case 4: // Beach
-      if (!game.effectsUsed?.beachUsed) {
-        if (!game.board.beachMarker) {
-          game.board.beachMarker = true;
+      if (!updatedGame.state.effectsUsed?.beachUsed) {
+        if (!updatedGame.state.board.beachMarker) {
+          updatedGame.state.board.beachMarker = true;
         } else {
-          game.board.beachMarker = false;
-          game.history.push(`${player.name} advanced the Rescue token via Beach.`);
+          updatedGame.state.board.beachMarker = false;
+          updatedGame.state.history.push(`${player.name} advanced the Rescue token via Beach.`);
         }
-        game.effectsUsed = { ...game.effectsUsed, beachUsed: true };
+        updatedGame.state.effectsUsed = { ...updatedGame.state.effectsUsed, beachUsed: true };
       } else {
-        game.history.push(`${player.name} used Beach, but its effect was already used this turn.`);
+        updatedGame.state.history.push(`${player.name} used Beach, but its effect was already used this turn.`);
       }
       break;
 
@@ -193,7 +200,7 @@ export function handlePlayCard(
       const allCards = [...player.hand, ...player.discard];
       if (!allCards.includes(6)) {
         player.hand.push(6);
-        game.history.push(`${player.name} gained a new location card (6).`);
+        updatedGame.state.history.push(`${player.name} gained a new location card (6).`);
       }
       break;
 
@@ -210,11 +217,11 @@ export function handlePlayCard(
       // Placeholder: draw 2 survival, keep 1 (requires UI)
       // For now, give 1 dummy survival card
       player.survival.push("RandomSurvivalCard");
-      game.history.push(`${player.name} drew a Survival card.`);
+      updatedGame.state.history.push(`${player.name} drew a Survival card.`);
       break;
 
     default:
       break;
   }
-  return game;
+  return updatedGame;
 }
