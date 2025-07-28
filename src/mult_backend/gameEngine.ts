@@ -134,14 +134,16 @@ export function startGame(game: Game): Game {
   console.log("Game started! Player list:", game.players);
   return game;
 }
-
-export function handlePlayCard(
+//how the cards get activated
+export function handleActivateCard(
   game: Game,
   pid: string,
   cardId: number
 ): Game {
   const updatedGame = { ...game };
-  const player = updatedGame.players.find(p => p.id === pid);
+  const playerIndex = updatedGame.players.findIndex(p => p.id === pid);
+
+const player = { ...updatedGame.players[playerIndex] };
 
   if (!player) {
     console.warn(`Player ${pid} not found in game.`);
@@ -223,5 +225,7 @@ export function handlePlayCard(
     default:
       break;
   }
+
+  updatedGame.players[playerIndex] = player;
   return updatedGame;
 }

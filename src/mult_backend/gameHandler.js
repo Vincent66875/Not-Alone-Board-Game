@@ -8,7 +8,7 @@ const {v4: uuidv4} = require('uuid');
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-const { startGame, initializeGame } = require('./gameEngine');
+const { startGame, initializeGame, handleActivateCard } = require('./gameEngine');
 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
@@ -295,8 +295,8 @@ async function handleActivate(body, connectionId) {
     return { statusCode: 404, body: 'Player not found' };
   }
 
-  // Use your imported gameEngine function handlePlayCard to update state
-  const updatedState = handlePlayCard(game.state, thisPlayer.id, cardId);
+  // Use your imported gameEngine function handleActivateCard to update state
+  const updatedState = handlhandleActivateCardePlayCard(game.state, thisPlayer.id, cardId);
 
   await saveGame(updatedState);
 
