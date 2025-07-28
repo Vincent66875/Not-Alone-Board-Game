@@ -205,10 +205,6 @@ async function handleHuntChoice(body, connectionId) {
   if (!Array.isArray(game.state.huntedLocations)) {
     game.state.huntedLocations = [];
   }
-  if (typeof game.state.remainingTokens !== 'number') {
-    //Initialing at start
-    game.state.remainingTokens = 1;
-  }
 
   game.state.huntedLocations.push({ cardId, type: actionType });
 

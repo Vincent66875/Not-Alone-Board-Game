@@ -59,7 +59,7 @@ export interface GameState {
     wreckUsed?: boolean;
   };
   huntedLocations?: HuntedLocation[];
-  remainingTokens?: number;
+  remainingTokens: number;
 }
 
 export type Player = {
@@ -88,6 +88,7 @@ export function initializeGame(roomId: string, players: Player[]): Game {
   const initialState: GameState = {
     phase: 'lobby',
     turn: 0,
+    remainingTokens: 1,
     board: {
       player_num: players.length,
       rescue: 0,
