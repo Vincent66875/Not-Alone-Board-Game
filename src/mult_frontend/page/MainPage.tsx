@@ -2,13 +2,13 @@ interface MainPageProps {
   roomId: string;
   playerName: string;
   players: string[];
+  readyToStart: boolean;
   onStart: () => void;
   onLeave: () => void;
 }
 
-export default function MainPage({ roomId, playerName, players, onStart, onLeave }: MainPageProps) {
-  const canStart = true;
-
+export default function MainPage({ roomId, playerName, players, readyToStart, onStart, onLeave }: MainPageProps) {
+  
   return (
     <div className="bg-black bg-opacity-60 rounded-lg p-6 flex flex-col items-center text-red-300 shadow-lg">
       <h1 className="text-3xl font-bold mb-4">Room: {roomId}</h1>
@@ -28,7 +28,7 @@ export default function MainPage({ roomId, playerName, players, onStart, onLeave
           Leave Room
         </button>
 
-        {canStart ? (
+        {readyToStart ? (
           <button
             onClick={()=>{
                 onStart();

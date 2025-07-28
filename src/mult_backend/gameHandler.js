@@ -175,7 +175,7 @@ async function handlePlayCard(body, connectionId) {
 
 async function handleHuntChoice(body, connectionId) {
   console.log('handleHuntChoice called with body:', body);
-
+ 
   const { roomId, player, cardId, tokenType } = body;
 
   if (!roomId || !player?.id) {
@@ -206,7 +206,6 @@ async function handleHuntChoice(body, connectionId) {
   }
 
   await saveGame(game);
-  console.log(`Saved game after hunt choice, remainingTokens now: ${game.state.remainingTokens}`);
 
   await broadcastToRoom(roomId, {
     type: 'huntSelectUpdate',
@@ -284,8 +283,7 @@ async function handleStartGame(body, connectionId) {
 
     await broadcastToRoom(roomId, {
       type: 'gameUpdate',
-      gameState: updatedGame.state,
-      players: updatedGame.players,
+      game,
     });
     await debugBroadcast(roomId, 'Broadcasted gameUpdate');
   } catch (err) {
@@ -313,7 +311,7 @@ async function handleLeaveGame(body, connectionId) {
         await broadcastToRoom(roomId, {
             type: 'roomUpdate',
             players: game.players,
-            readyToStart: game.players.length>=1,
+            readyToStart: game.players.length>=3,
         });
     }
     await removeConnection(connectionId);

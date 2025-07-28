@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
 import type { Player, GameState } from '../../mult_backend/gameEngine';
 import { allLocations } from '../../mult_backend/gameEngine';
+
 type ResolutionPageProps = {
   player: Player;
   players: Player[];
@@ -8,102 +8,75 @@ type ResolutionPageProps = {
   onContinue: () => void;
 };
 
-const tokenColors: Record<string, string> = {
-  Creature: 'bg-red-600',
-  Assimilation: 'bg-yellow-500',
-  Shadow: 'bg-purple-600'
-};
-
-const ResolutionPage: React.FC<ResolutionPageProps> = ({
+export default function ResolutionPage({
   player,
   players,
   gameState,
   onContinue,
-}) => {
-  useEffect(() => {
-    console.log('Resolution phase started. Game state:', gameState);
-  }, [gameState]);
+}: ResolutionPageProps) {
+  const huntedMap = new Map<number, 'c' | 'a' | 't'>(
+    gameState.huntedLocations?.map(h => [h.cardId, h.type]) || []
+  );
 
-  const huntedLocations = gameState.huntedLocations ?? [];
-
-  const locationHasToken = (locationId: number, type: 'c' | 'a' | 't') => {
-    return huntedLocations.some(
-      (h) => h.cardId === locationId && h.type === type
-    );
-  };
-
-  const getTokenTypesOnLocation = (locationId: number): ('c' | 'a' | 't')[] => {
-    return huntedLocations
-      .filter((h) => h.cardId === locationId)
-      .map((h) => h.type);
-  };
-
+  const playedCardId = player.playedCard;
+  console.log(playedCardId);
   return (
-    <div className="p-6 text-white">
-      <h2 className="text-3xl font-bold mb-6 text-center">Resolution Phase</h2>
+    <div className="flex flex-col items-center mt-4 text-white">
+      <h2 className="text-2xl font-semibold mb-6">Resolution Phase</h2>
+      <p className="mb-4">Tokens have been revealed. Review the results below:</p>
 
-      <div className="grid grid-cols-4 gap-4 justify-items-center mb-8">
-        {allLocations.map((name, i) => {
-          const locationId = i + 1;
-          const tokenTypes = getTokenTypesOnLocation(locationId);
+      <div className="grid grid-cols-5 gap-6">
+        {Array.from({ length: 10 }, (_, i) => {
+          const cardId = i + 1;
+          const isHunted = huntedMap.has(cardId);
+          const tokenType = huntedMap.get(cardId);
+          const isPlayed = playedCardId === cardId;
+          const wasSafe = isPlayed && !isHunted;
 
           return (
-            <div key={locationId} className="relative">
+            <div
+              key={cardId}
+              className={`relative flex flex-col items-center p-2 rounded-xl shadow-lg transition-transform duration-150 ${
+                isPlayed
+                  ? wasSafe
+                    ? 'border-4 border-green-400 cursor-pointer animate-pulse'
+                    : 'border-4 border-red-500'
+                  : ''
+              } ${isHunted ? 'grayscale' : ''}`}
+              onClick={() => {
+                if (wasSafe) onContinue();
+              }}
+            >
+              <div className="text-sm mb-2">Location {cardId}</div>
               <img
-                src={`/cards/${name}.png`}
-                alt={name}
-                className="w-32 h-auto rounded-xl shadow-lg"
+                src={`/cards/${allLocations[i]}.png`}
+                alt={`Card ${cardId}`}
+                className="w-24 h-auto rounded"
               />
-              {tokenTypes.map((type) => (
-                <span
-                  key={type}
-                  className={`absolute top-1 left-1 text-xs text-white px-2 py-1 rounded-full shadow ${tokenColors[type] || 'bg-gray-700'} mt-1 mr-1`}
-                >
-                  {type}
-                </span>
-              ))}
+              {tokenType && (
+                <img
+                  src={`/tokens/${tokenType}.png`}
+                  alt={`Token ${tokenType}`}
+                  className="absolute top-0 right-0 w-8 h-8"
+                />
+              )}
             </div>
           );
         })}
       </div>
 
-      <h3 className="text-xl font-semibold mb-4 text-center">Player Reveals</h3>
-      <div className="grid grid-cols-3 gap-6 justify-items-center mb-10">
-        {players
-          .filter((p) => !p.isCreature && p.playedCard)
-          .map((p) => (
-            <div
-              key={p.id}
-              className="bg-gray-800 p-4 rounded-xl w-40 text-center shadow-lg"
-            >
-              <p className="text-sm mb-2">{p.name}</p>
-              <img
-                src={`/cards/${allLocations[(p.playedCard ?? 1) - 1]}.png`}
-                alt={`Card ${p.playedCard}`}
-                className="w-full rounded"
-              />
-              {locationHasToken(p.playedCard!, 'c') && (
-                <p className="text-red-500 mt-2 text-xs">Caught by Creature</p>
-              )}
-              {locationHasToken(p.playedCard!, 'a') && (
-                <p className="text-yellow-400 mt-1 text-xs">Assimilation!</p>
-              )}
-            </div>
-          ))}
-      </div>
+      {!playedCardId && (
+        <p className="text-yellow-300 mt-6">You didn’t play a card this turn.</p>
+      )}
 
-      {player.isCreature && (
-        <div className="text-center">
-          <button
-            onClick={onContinue}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-xl text-lg"
-          >
-            Continue to Next Phase
-          </button>
-        </div>
+      {playedCardId && huntedMap.has(playedCardId) && (
+        <button
+          className="mt-6 px-6 py-2 bg-blue-600 rounded hover:bg-blue-700"
+          onClick={onContinue}
+        >
+          Continue
+        </button>
       )}
     </div>
   );
-};
-
-export default ResolutionPage;
+}

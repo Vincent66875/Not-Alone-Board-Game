@@ -9,7 +9,7 @@ import GameTopBar from '../components/GameTopBar';
 import GameDownBar from '../components/GameDownBar';
 import { useWebSocket } from '../hooks/useWebsocket';
 import { getPhaseNumber } from '../../mult_backend/gameEngine';
-import type { Player, GameState } from '../../mult_backend/gameEngine';
+import type { Player, GameState, Game } from '../../mult_backend/gameEngine';
 
 export default function MultiplayerApp() {
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -17,8 +17,30 @@ export default function MultiplayerApp() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [stage, setStage] = useState<'join' | 'lobby' | 'game' >('join');
+  const [readyToStart, setReadyToStart] = useState<boolean>(false);
 
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
+
+  function updateFromGame(game: Game) {
+    setGameState(game.state);
+    setPlayers(game.players);
+
+    if (!player) return;
+
+    const updated = game.players.find(
+      (p: Player) =>
+        p.connectionId === player.connectionId ||
+        p.id === player.id ||
+        p.name === player.name
+    );
+
+    if (updated) {
+      setPlayer(updated);
+      console.log('Updated player info from', game);
+    } else {
+      console.warn('No matching player found in', game);
+    }
+  }
 
   function handleJoin(roomId: string, playerName: string) {
     setRoomId(roomId);
@@ -37,7 +59,6 @@ export default function MultiplayerApp() {
   function handleStartGame() {
     sendMessage({"type": 'startGame', roomId});
     console.log("Sending: start room: " + roomId);
-    setStage('game');
   }
   function handleLeaveGame() {
     console.log("Sending: leave room: " + roomId);
@@ -57,7 +78,7 @@ export default function MultiplayerApp() {
     sendMessage({
       type: 'huntSelect',
       roomId,
-      playerId: player.id,
+      player: { id: player.id },
       cardId,
       tokenType,
     });
@@ -75,76 +96,42 @@ export default function MultiplayerApp() {
   }
 
   useEffect(() => {
-    const latestMessage = messages[messages.length - 1];
-    if (!latestMessage) return;
-    console.log('Received message:', latestMessage);
+  const latestMessage = messages[messages.length - 1];
+  if (!latestMessage) return;
 
-    if (latestMessage.type === 'roomUpdate' && latestMessage.roomId === roomId) {
-      setPlayers(latestMessage.players || []);
-      if (player) {
-        const updatedPlayer = latestMessage.players.find(
-          (p: Player) =>
-            p.connectionId === player.connectionId || p.name === player.name
-        );
-        if (updatedPlayer) {
-          setPlayer(updatedPlayer);
-          console.log('Updated player from roomUpdate:', updatedPlayer);
-        }
+  switch (latestMessage.type) {
+    case 'roomUpdate':
+      if (latestMessage.game?.state && latestMessage.game?.players) {
+        updateFromGame(latestMessage.game);
       }
-    }
+      setReadyToStart(latestMessage.readyToStart);
+      break;
 
-    if (latestMessage.type === 'stageUpdate' && latestMessage.stage === 'game') {
-      setStage('game');
-      console.log('Stage updated to game');
-    }
-
-    if (latestMessage.type === 'gameUpdate') {
-      const updatedGameState = latestMessage.gameState;
-      setGameState(updatedGameState);
-      
-      if (latestMessage.players) {
-        setPlayers(latestMessage.players);
-      } else {
-        console.warn('gameUpdate missing players array');
-        return;
+    case 'stageUpdate':
+      if (latestMessage.stage === 'game') {
+        setStage('game');
       }
+      break;
 
-      if (!player) return;
-      let updatedPlayer = latestMessage.players.find(
-        (p: Player) => p.connectionId === player.connectionId
-      ) || latestMessage.players.find(
-        (p: Player) => p.id === player.id
-      ) || latestMessage.players.find(
-        (p: Player) => p.name === player.name
-      );
-
-      if (updatedPlayer) {
-        setPlayer(updatedPlayer);
-        console.log('Updated player info from gameUpdate:', updatedPlayer);
-      } else {
-        console.warn('No matching player found in gameUpdate players for', player);
+    case 'gameUpdate':
+      if (latestMessage.gameState && latestMessage.players) {
+        updateFromGame(latestMessage.game);
       }
-    }
+      break;
 
-    if (latestMessage.type === 'planningWait' ||
-      latestMessage.type === 'cardPlayed'
-    ) {
-      console.log(latestMessage.type);
-      setGameState(latestMessage.game.state);
-      if (latestMessage.game.players) {
-        setPlayers(latestMessage.game.players);
+    case 'planningWait':
+    case 'cardPlayed':
+    case 'huntSelectUpdate':
+      if (latestMessage.game?.state && latestMessage.game?.players) {
+        updateFromGame(latestMessage.game);
       }
-    }
+      break;
 
-    if (latestMessage.type === 'huntSelectUpdate'){
-      console.log("Creature hunted a location");
-      setGameState(latestMessage.game.state);
-      if (latestMessage.game.players) {
-        setPlayers(latestMessage.game.players);
-      }
-    }
+    default:
+      break;
+  }
+}, [messages, roomId]);
 
-  }, [messages, roomId]);
 
 
   return (
@@ -158,6 +145,7 @@ export default function MultiplayerApp() {
           roomId={roomId}
           playerName={player.name}
           players={players.map((p) => p.name)}
+          readyToStart={readyToStart}
           onStart={() => {
             console.log('Sending startGame message');
             handleStartGame();
