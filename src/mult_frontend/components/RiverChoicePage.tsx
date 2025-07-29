@@ -15,15 +15,13 @@ export default function RiverChoicePage({
   gameState,
   onSubmit,
 }: RiverChoicePageProps) {
+  if(!player.playedCard || !player.playedCardAlt) return;
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
-  if(!player.playedCardAlt || !player.playedCard) return;
-
   const huntedMap = new Map<number, 'c' | 'a' | 't'>(
     gameState.huntedLocations?.map(h => [h.cardId, h.type]) || []
   );
 
   const hasRiverChoice = player.riverActive && player.playedCard && player.playedCardAlt;
-  const waitingPlayers = players.filter(p => p.riverActive && p.id !== player.id);
 
   function confirmChoice() {
     if (selectedCardId !== null) {

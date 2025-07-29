@@ -207,6 +207,8 @@ async function handleHuntChoice(body, connectionId) {
 
   if (game.state.remainingTokens <= 0) {
     game.state.phase = 'riverChoice';
+    // const anyRiverActive = updatedGame.players.some(p => p.riverActive);
+    // game.state.phase = anyRiverActive ? 'riverChoice' : 'resolution';
   }
 
   await saveGame(game);

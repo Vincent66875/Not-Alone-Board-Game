@@ -120,7 +120,7 @@ export function startGame(game: Game): Game {
       ...p,
       will: 3,
       isCreature: i === creature,
-      hand: [1, 2, 3, 4, 5],
+      hand: i === creature ? [] : [1, 2, 3, 4, 5],
       discard: [],
       riverActive: false,
       artefactActive: false

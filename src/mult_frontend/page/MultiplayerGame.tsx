@@ -140,9 +140,6 @@ export default function MultiplayerApp() {
         if (latestMessage.game) {
           updateFromGame(latestMessage.game);
         }
-        // if (latestMessage.players) {
-        //   setPlayers(latestMessage.players);
-        // }
         if (latestMessage.readyToStart !== undefined) {
           setReadyToStart(latestMessage.readyToStart);
         }
