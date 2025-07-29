@@ -5,6 +5,7 @@ interface GameTopBarProps {
   A_Progress: number;
   players_num: number;
   riverActive: boolean;
+  artefactActive: boolean;
 }
 
 export default function GameTopBar({
@@ -14,6 +15,7 @@ export default function GameTopBar({
   A_Progress,
   players_num,
   riverActive,
+  artefactActive,
 }: GameTopBarProps) {
   const left = 12 + players_num;
   const right = 6 + players_num;
@@ -36,7 +38,11 @@ export default function GameTopBar({
                 River Active: Play 2 cards this turn
             </div>
         )}
+        {artefactActive && (
+            <div className="text-yellow-300 font-bold text-sm px-2 py-1 bg-yellow-800 rounded shadow">
+                Artefact Active: Play 2 cards this turn
+            </div>
+        )}
     </div>
-
   );
 }

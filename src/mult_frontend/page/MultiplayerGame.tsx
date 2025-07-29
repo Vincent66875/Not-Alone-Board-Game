@@ -53,7 +53,9 @@ export default function MultiplayerApp() {
       isCreature: false,
       will: 0,
       survival: [],
-      riverActive: false });
+      riverActive: false,
+      artefactActive: false,
+    });
     setStage('lobby');
   }
   function handleStartGame() {
@@ -187,6 +189,7 @@ export default function MultiplayerApp() {
               A_Progress={gameState.board.assimilation}
               players_num={players.length}
               riverActive={player.riverActive ?? false}
+              artefactActive={player.artefactActive ?? false}
             />
           )}
 
@@ -284,7 +287,7 @@ export default function MultiplayerApp() {
             ) : (
               <h2>Waiting for game data...</h2>
             )}
-            {gameState && <GameDownBar players={players} />}
+            {gameState && player && <GameDownBar players={players} player={player} />}
           </div>
         </>
 

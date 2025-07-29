@@ -282,7 +282,7 @@ async function handleStartGame(body, connectionId) {
 }
 
 async function handleActivate(body, connectionId) {
-  const { roomId, player, cardId } = body;
+  const { roomId, player, cardId, selectedCardIds, selectedSurvivalCard, targetPlayerId, effectChoice } = body;
   if (!roomId || !player?.id || cardId === undefined) {
     return { statusCode: 400, body: 'Missing parameters' };
   }
@@ -301,7 +301,12 @@ async function handleActivate(body, connectionId) {
     return { statusCode: 404, body: 'Player not found' };
   }
 
-  const updatedGame = handleActivateCard(game, thisPlayer.id, cardId);
+  const updatedGame = handleActivateCard(game, thisPlayer.id, cardId, {
+    selectedCardIds,
+    selectedSurvivalCard,
+    targetPlayerId,
+    effectChoice,
+  });
 
   await saveGame(updatedGame);
 
