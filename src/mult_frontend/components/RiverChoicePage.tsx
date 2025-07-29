@@ -15,7 +15,7 @@ export default function RiverChoicePage({
   gameState,
   onSubmit,
 }: RiverChoicePageProps) {
-  if(!player.playedCard || !player.playedCardAlt) return;
+
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const huntedMap = new Map<number, 'c' | 'a' | 't'>(
     gameState.huntedLocations?.map(h => [h.cardId, h.type]) || []
@@ -74,15 +74,17 @@ export default function RiverChoicePage({
           <h3 className="text-xl font-bold mb-4">Choose a card to reveal</h3>
           <div className="flex gap-6 mb-6">
             {[player.playedCard, player.playedCardAlt].map(id => (
-              <img
-                key={id}
-                src={`/cards/${allLocations[id - 1]}.png`}
-                alt={`Card ${id}`}
-                className={`w-40 h-auto rounded cursor-pointer shadow-lg ${
-                  selectedCardId === id ? 'border-4 border-yellow-400' : 'border-2 border-transparent'
-                }`}
-                onClick={() => setSelectedCardId(id)}
-              />
+              id !== undefined && (
+                <img
+                  key={id}
+                  src={`/cards/${allLocations[id - 1]}.png`}
+                  alt={`Card ${id}`}
+                  className={`w-40 h-auto rounded cursor-pointer shadow-lg ${
+                    selectedCardId === id ? 'border-4 border-yellow-400' : 'border-2 border-transparent'
+                  }`}
+                  onClick={() => setSelectedCardId(id)}
+                />
+              )
             ))}
           </div>
           <div className="flex gap-6">

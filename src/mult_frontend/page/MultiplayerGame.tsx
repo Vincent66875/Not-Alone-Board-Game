@@ -23,6 +23,9 @@ export default function MultiplayerApp() {
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
 
   function updateFromGame(game: Game) {
+    if((game.state.phase === 'riverChoice')){
+      console.log("Phase: River!!!");
+    }
     setGameState(game.state);
     setPlayers(game.players);
 
@@ -206,6 +209,7 @@ export default function MultiplayerApp() {
           <div className="text-white text-center mt-10">
             {gameState && player ? (
               (() => {
+                console.log("Current phase: ", gameState.phase);
                 const { phase } = gameState;
 
                 if (phase === 'planning') {
