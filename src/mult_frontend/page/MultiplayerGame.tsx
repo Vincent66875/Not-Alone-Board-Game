@@ -4,6 +4,7 @@ import MainPage from './MainPage';
 import WaitingPage from '../components/WaitingPage';
 import HuntingPhase from '../components/HuntingPhase';
 import PlanningPhase from '../components/PlanningPhase';
+import RiverChoicePage from '../components/RiverChoicePage';
 import ResolutionPage from '../components/ResolutionPage';
 import GameTopBar from '../components/GameTopBar';
 import GameDownBar from '../components/GameDownBar';
@@ -86,6 +87,16 @@ export default function MultiplayerApp() {
       tokenType,
     });
   }
+  function handleRiverChoice(cardId: number) {
+    if (!roomId || !player) return;
+    console.log("River player made the choice");
+    sendMessage({
+      type: 'riverChoice',
+      roomId,
+      player,
+      cardId,
+    })
+  }
   function handleResolution() {
     if (!roomId || !player) return;
 
@@ -129,9 +140,9 @@ export default function MultiplayerApp() {
         if (latestMessage.game) {
           updateFromGame(latestMessage.game);
         }
-        if (latestMessage.players) {
-          setPlayers(latestMessage.players);
-        }
+        // if (latestMessage.players) {
+        //   setPlayers(latestMessage.players);
+        // }
         if (latestMessage.readyToStart !== undefined) {
           setReadyToStart(latestMessage.readyToStart);
         }
@@ -144,6 +155,8 @@ export default function MultiplayerApp() {
       case 'planningWait':
       case 'cardPlayed':
       case 'huntSelectUpdate':
+      case 'riverUpdate':
+      case 'riverComplete':
         if (latestMessage.game?.state && latestMessage.game?.players) {
           updateFromGame(latestMessage.game);
         }
@@ -260,6 +273,17 @@ export default function MultiplayerApp() {
                       />
                     );
                   }
+                }
+
+                if (phase === 'riverChoice') {
+                  return (
+                    <RiverChoicePage
+                      player={player}
+                      players={players}
+                      gameState={gameState}
+                      onSubmit={handleRiverChoice}
+                    />
+                  )
                 }
 
                 if (phase === 'resolution') {

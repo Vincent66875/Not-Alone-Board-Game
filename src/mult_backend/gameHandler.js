@@ -27,6 +27,8 @@ exports.handler = async (event) => {
                 return await handlePlayCard(body, connectionId);
             case 'huntSelect':
                 return await handleHuntChoice(body, connectionId);
+            case 'riverChoice':
+                return await handleRiverChoice(body, connectionId);
             case 'activateCard':
                 return await handleActivate(body, connectionId);
             case 'endTurn':
@@ -204,7 +206,7 @@ async function handleHuntChoice(body, connectionId) {
   game.state.remainingTokens -= 1;
 
   if (game.state.remainingTokens <= 0) {
-    game.state.phase = 'resolution';
+    game.state.phase = 'riverChoice';
   }
 
   await saveGame(game);
@@ -217,6 +219,52 @@ async function handleHuntChoice(body, connectionId) {
 
   return { statusCode: 200 };
 }
+
+async function handleRiverChoice(body, connectionId) {
+  const { roomId, player, cardId } = body;
+
+  if (!roomId || !player?.id || cardId === undefined) {
+    console.log('Missing roomId, player id, or cardId');
+    return { statusCode: 400, body: 'Missing parameters' };
+  }
+
+  const game = await getGame(roomId);
+  if (!game) {
+    console.log('Game not found for room:', roomId);
+    return { statusCode: 404, body: 'Game not found' };
+  }
+
+  const thisPlayer = game.players.find(p => p.id === player.id);
+  if (!thisPlayer) {
+    return { statusCode: 404, body: 'Player not found' };
+  }
+
+  // Update the player's state
+  thisPlayer.riverActive = false;
+  thisPlayer.playedCardAlt = undefined;
+  thisPlayer.playedCard = cardId;
+
+  // Check if any players still need to choose
+  const stillWaiting = game.players.some(p => !p.isCreature && p.riverActive);
+
+  if (!stillWaiting) {
+    // Advance to resolution phase
+    game.state.phase = 'resolution';
+    game.state.history.push('All River choices resolved. Moving to resolution phase.');
+  }
+
+  await saveGame(game);
+
+  await broadcastToRoom(roomId, {
+    type: stillWaiting ? 'riverUpdate' : 'riverComplete',
+    game,
+  });
+
+  console.log(`Broadcasted ${stillWaiting ? 'riverUpdate' : 'riverComplete'}`);
+
+  return { statusCode: 200 };
+}
+
 
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
