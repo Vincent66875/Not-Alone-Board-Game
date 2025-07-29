@@ -8,7 +8,7 @@ const {v4: uuidv4} = require('uuid');
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-const { startGame, initializeGame, handleActivateCard } = require('./gameEngine');
+const { startGame, initializeGame, handleActivateCard, handleCatching, handleReset } = require('./gameEngine');
 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
@@ -159,7 +159,7 @@ async function handlePlayCard(body, connectionId) {
   console.log("Saved game after player played");
 
   await broadcastToRoom(roomId, {
-    type: 'planningWait',
+    type: 'gameUpdate',
     game,
   });
 
@@ -169,7 +169,7 @@ async function handlePlayCard(body, connectionId) {
     console.log("Transitioned to hunting phase");
 
     await broadcastToRoom(roomId, {
-      type: 'cardPlayed',
+      type: 'planningComplete',
       game,
     });
   } 
@@ -207,14 +207,20 @@ async function handleHuntChoice(body, connectionId) {
 
   if (game.state.remainingTokens <= 0) {
     const anyRiverActive = game.players.some(p => p.riverActive);
-    console.log("River active");
-    game.state.phase = anyRiverActive ? 'riverChoice' : 'resolution';
+    if (anyRiverActive) {
+        game.state.phase = 'riverChoice';
+        console.log("Player with river active exist");
+    }else{
+        game.state.phase = 'resolution';
+        console.log("Skip river choice page");
+        handleCatching(game);
+    }
   }
 
   await saveGame(game);
 
   await broadcastToRoom(roomId, {
-    type: 'huntSelectUpdate',
+    type: 'huntingComplete',
     game,
   });
   console.log('Broadcasted huntSelectUpdate');
@@ -250,7 +256,8 @@ async function handleRiverChoice(body, connectionId) {
   const stillWaiting = game.players.some(p => !p.isCreature && p.riverActive);
 
   if (!stillWaiting) {
-    // Advance to resolution phase
+    // Calculate catching and advance to resolution phase
+    await handleCatching(game);
     game.state.phase = 'resolution';
     game.state.history.push('All River choices resolved. Moving to resolution phase.');
   }
@@ -258,7 +265,7 @@ async function handleRiverChoice(body, connectionId) {
   await saveGame(game);
 
   await broadcastToRoom(roomId, {
-    type: stillWaiting ? 'riverUpdate' : 'riverComplete',
+    type: stillWaiting ? 'gameUpdate' : 'riverComplete',
     game,
   });
 
@@ -305,7 +312,7 @@ async function handleStartGame(body, connectionId) {
     await saveGame(updatedGame);
     
     await broadcastToRoom(roomId, {
-      type: 'gameUpdate',
+      type: 'gameReady',
       game: updatedGame,
       players: updatedGame.players.map(p => ({
         id: p.id,
@@ -346,24 +353,68 @@ async function handleActivate(body, connectionId) {
     return { statusCode: 404, body: 'Players not available' };
   }
 
-  const thisPlayer = game.players.find(p => p.id === player.id);
-  if (!thisPlayer) {
+  const thisPlayerIndex = game.players.findIndex(p => p.id === player.id);
+  if (thisPlayerIndex === -1) {
     return { statusCode: 404, body: 'Player not found' };
   }
 
-  const updatedGame = handleActivateCard(game, thisPlayer.id, cardId, {
+  const updatedGame = handleActivateCard(game, player.id, cardId, {
     selectedCardIds,
     selectedSurvivalCard,
     targetPlayerId,
     effectChoice,
   });
 
+  // Mark player as activated
+  updatedGame.players[thisPlayerIndex].hasActivated = true;
+
+  // Check if all players have activated
+  const allActivated = updatedGame.players
+    .filter(p => !p.isCreature) // Skip creature
+    .every(p => p.hasActivated);
+
+  await saveGame(updatedGame);
+
+  if (allActivated) {
+    updatedGame.state.phase = 'endTurn';
+    await broadcastToRoom(roomId, {
+      type: 'activationComplete',
+      game: updatedGame,
+    });
+  } else {
+    await broadcastToRoom(roomId, {
+      type: 'gameUpdate',
+      game: updatedGame,
+    });
+  }
+
+  return { statusCode: 200 };
+}
+
+async function handleEndTurn(body, connectionId) {
+  const { roomId, player } = body;
+
+  if (!roomId || !player?.id) {
+    console.log('Missing roomId or player');
+    return { statusCode: 400, body: 'Missing parameters' };
+  }
+
+  const game = await getGame(roomId);
+  if (!game) {
+    console.log('Game not found');
+    return { statusCode: 404, body: 'Game not found' };
+  }
+
+  const updatedGame = handleReset(game);
+
   await saveGame(updatedGame);
 
   await broadcastToRoom(roomId, {
-    type: 'gameUpdate',
+    type: 'turnComplete',
     game: updatedGame,
   });
+
+  console.log('Turn ended, broadcasted turnComplete');
 
   return { statusCode: 200 };
 }
@@ -447,10 +498,10 @@ async function addConnection(connectionId, roomId, playerName) {
         }
     }));
 }
-async function removeConnection(connectionId, roomId, playerName) {
+async function removeConnection(connectionId) {
     await ddb.send(new DeleteCommand({
         TableName: TABLE_CONNECTIONS,
-        Key: roomId,
+        Key: {connectionId},
     }));
 }
 async function debugBroadcast(roomId, message) {

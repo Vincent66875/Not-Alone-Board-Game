@@ -76,6 +76,7 @@ export type Player = {
   riverActive: boolean;
   artefactActive: boolean;
   playedCardAlt?: number;
+  hasActivated?: boolean;
 };
 
 export interface Game {
@@ -138,6 +139,74 @@ export function startGame(game: Game): Game {
   return game;
 }
 
+export function handleCatching(game: Game): Game {
+  const updatedGame = { ...game };
+  const hunted = updatedGame.state.huntedLocations ?? [];
+  const players = updatedGame.players ?? [];
+
+  let creatureTriggered = false;
+
+  for (const { cardId, type } of hunted) {
+    players.forEach(player => {
+      const played = player.playedCard ?? null;
+
+      if (played === cardId) {
+        switch (type) {
+          case 'c': // Creature
+            player.will = Math.max(0, player.will - 1);
+            creatureTriggered = true;
+            updatedGame.state.history.push(`${player.name} was caught by the Creature and lost 1 Will.`);
+            break;
+
+          case 'a': // Assimilation
+            if (player.hand.length > 0) {
+              const removedCard = player.hand.pop(); // Remove last card (or use random if needed)
+              updatedGame.state.history.push(
+                `${player.name} was caught by Artemia and discarded Place card ${removedCard}.`
+              );
+            } else {
+              updatedGame.state.history.push(`${player.name} was caught by Artemia but had no Place cards to discard.`);
+            }
+            break;
+
+          case 't':
+            // Nothing for Target token
+            break;
+        }
+      }
+    });
+  }
+
+  if (creatureTriggered) {
+    updatedGame.state.board.assimilation += 1;
+    updatedGame.state.history.push(`The Creature advanced the Assimilation token by 1.`);
+  }
+
+  return updatedGame;
+}
+export function handleWill(game: Game): Game {
+  const updatedGame = { ...game };
+
+  updatedGame.players = updatedGame.players.map(player => {
+    if (!player.isCreature && player.will <= 0) {
+      return {
+        ...player,
+        will: 3,
+        discard: [],
+        hand: [...player.hand, ...player.discard],
+      };
+    }
+    return player;
+  });
+
+  const numRestored = updatedGame.players.filter(p => !p.isCreature && p.will === 3).length;
+  if (numRestored > 0) {
+    updatedGame.state.board.assimilation += numRestored;
+    updatedGame.state.history.push(`${numRestored} player(s) exhausted and restored. Assimilation +${numRestored}.`);
+  }
+
+  return updatedGame;
+}
 //how the cards get activated
 export function handleActivateCard(
   game: Game,
@@ -298,5 +367,36 @@ export function handleActivateCard(
   }
 
   updatedGame.players[playerIndex] = player;
+  return updatedGame;
+}
+
+export function handleReset(game: Game): Game {
+  const updatedGame = { ...game };
+
+  // Clear phase and increment turn
+  updatedGame.state.phase = 'planning';
+  updatedGame.state.turn += 1;
+
+  // Reset hunted locations and effect flags
+  updatedGame.state.huntedLocations = [];
+  updatedGame.state.effectsUsed = {};
+
+  // Update token availability based on rescue progress
+  updatedGame.state.remainingTokens = updatedGame.state.board.rescue >= 10 ? 2 : 1;
+
+  // Advance rescue track
+  updatedGame.state.board.rescue += 1;
+
+  // Reset player turn data
+  updatedGame.players = updatedGame.players.map((p) => ({
+    ...p,
+    playedCard: undefined,
+    playedCardAlt: undefined,
+    riverActive: false,
+    artefactActive: false,
+    hasActivated: false,
+  }));
+  updatedGame.state.history.push(`Turn ${updatedGame.state.turn} ended. Starting next turn.`);
+
   return updatedGame;
 }

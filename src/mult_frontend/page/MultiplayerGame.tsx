@@ -4,8 +4,9 @@ import MainPage from './MainPage';
 import WaitingPage from '../components/WaitingPage';
 import HuntingPhase from '../components/HuntingPhase';
 import PlanningPhase from '../components/PlanningPhase';
-import RiverChoicePage from '../components/RiverChoicePage';
-import ResolutionPage from '../components/ResolutionPage';
+import RiverChoicePhase from '../components/RiverChoicePhase';
+import ResolutionPhase from '../components/ResolutionPhase';
+import EndingPage from '../components/EndingPhase';
 import GameTopBar from '../components/GameTopBar';
 import GameDownBar from '../components/GameDownBar';
 import { useWebSocket } from '../hooks/useWebsocket';
@@ -23,9 +24,6 @@ export default function MultiplayerApp() {
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
 
   function updateFromGame(game: Game) {
-    if((game.state.phase === 'riverChoice')){
-      console.log("Phase: River!!!");
-    }
     setGameState(game.state);
     setPlayers(game.players);
 
@@ -123,6 +121,16 @@ export default function MultiplayerApp() {
       cardId,
     });
   }
+  function handleEnding() {
+    if (!roomId || !player) return;
+    console.log('Going next turn! clearing data');
+
+    sendMessage({
+      type: 'endTurn',
+      roomId,
+      player,
+    });
+  }
 
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
@@ -138,7 +146,7 @@ export default function MultiplayerApp() {
           setReadyToStart(latestMessage.readyToStart);
         }
         break;
-      case 'gameUpdate':
+      case 'gameReady':
         console.log("debug message: updating: ", latestMessage.readyToStart, latestMessage.stage);
         if (latestMessage.game) {
           updateFromGame(latestMessage.game);
@@ -151,12 +159,13 @@ export default function MultiplayerApp() {
           console.log('Stage updated to:', latestMessage.stage);
         }
         break;
-
-      case 'planningWait':
-      case 'cardPlayed':
-      case 'huntSelectUpdate':
-      case 'riverUpdate':
+      
+      case 'gameUpdate':
+      case 'planningComplete':
+      case 'huntingComplete':
       case 'riverComplete':
+      case 'activationComplete':
+      case 'turnComplete':
         if (latestMessage.game?.state && latestMessage.game?.players) {
           updateFromGame(latestMessage.game);
         }
@@ -182,7 +191,6 @@ export default function MultiplayerApp() {
           onStart={() => {
             console.log('Sending startGame message');
             handleStartGame();
-            sendMessage({ type: 'startGame', roomId });
           }}
           onLeave={() => {
             console.log('Sending LeaveGame message');
@@ -278,7 +286,7 @@ export default function MultiplayerApp() {
 
                 if (phase === 'riverChoice') {
                   return (
-                    <RiverChoicePage
+                    <RiverChoicePhase
                       player={player}
                       players={players}
                       gameState={gameState}
@@ -298,7 +306,7 @@ export default function MultiplayerApp() {
                     );
                   } else {
                     return (
-                      <ResolutionPage
+                      <ResolutionPhase
                         gameState={gameState}
                         player={player}
                         players={players}
@@ -307,6 +315,15 @@ export default function MultiplayerApp() {
                       />
                     );
                   }
+                }
+                if (phase === 'ended') {
+                  return (
+                    <EndingPage
+                      player={player}
+                      gameState={gameState}
+                      onEndTurn={handleEnding}
+                    />
+                  )
                 }
               })()
             ) : (

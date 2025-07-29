@@ -2,19 +2,19 @@ import { useState } from 'react';
 import type { GameState, Player } from '../../mult_backend/gameEngine';
 import { allLocations } from '../../mult_backend/gameEngine';
 
-interface RiverChoicePageProps {
+interface RiverChoicePhaseProps {
   player: Player;
   players: Player[];
   gameState: GameState;
   onSubmit: (cardId: number) => void;
 }
 
-export default function RiverChoicePage({
+export default function RiverChoicePhase({
   player,
   players,
   gameState,
   onSubmit,
-}: RiverChoicePageProps) {
+}: RiverChoicePhaseProps) {
 
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const huntedMap = new Map<number, 'c' | 'a' | 't'>(
