@@ -373,13 +373,6 @@ async function handleActivate(body, connectionId) {
     return { statusCode: 404, body: 'Game not found' };
   }
 
-  const thisPlayerIndex = game.players.findIndex(p => p.id === player.id);
-  if (thisPlayerIndex === -1) {
-    return { statusCode: 404, body: 'Player not found' };
-  }
-
-  const thisPlayer = game.players[thisPlayerIndex];
-
   // Apply the effect of the activated card
   const updatedGame = handleActivateCard(game, player.id, cardId, {
     selectedCardIds,
@@ -392,13 +385,21 @@ async function handleActivate(body, connectionId) {
   const checkedGame = handleWill(updatedGame);
 
   // Handle Artefact: if active, consume it and allow one more activation
-  if (thisPlayer.artefactActive === true) {
-    thisPlayer.artefactActive = false;
-    thisPlayer.hasActivated = false; // allow second activation
-  } else {
-    thisPlayer.hasActivated = true;
+  const thisPlayerIndex = checkedGame.players.findIndex(p => p.id === player.id);
+  if (thisPlayerIndex === -1) {
+    return { statusCode: 404, body: 'Player not found' };
   }
-  // Check if all non-Creature players are done
+  const updatedPlayer = checkedGame.players[thisPlayerIndex];
+
+  // update activation state on updatedPlayer
+  if (updatedPlayer.artefactActive === true) {
+    updatedPlayer.artefactActive = false;
+    updatedPlayer.hasActivated = false; // allow second activation
+  } else {
+    updatedPlayer.hasActivated = true;
+  }
+
+  // check if all non-Creature players activated
   const allActivated = checkedGame.players
     .filter(p => !p.isCreature)
     .every(p => p.hasActivated);
