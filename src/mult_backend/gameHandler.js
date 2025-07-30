@@ -260,7 +260,9 @@ async function handleRiverChoice(body, connectionId) {
   thisPlayer.playedCard = cardId;
 
   // Check if any players still need to choose
-  const stillWaiting = game.players.some(p => !p.isCreature && p.riverActive);
+  const stillWaiting = game.players.some(
+    p => !p.isCreature && (p.riverActive === true)
+  );
 
   if (!stillWaiting) {
     const updatedGame = handleCatching(game);

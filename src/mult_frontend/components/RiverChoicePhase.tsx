@@ -25,6 +25,7 @@ export default function RiverChoicePhase({
 
   function confirmChoice() {
     if (selectedCardId !== null) {
+      console.log("River choose: ", selectedCardId);
       onSubmit(selectedCardId);
     }
   }
