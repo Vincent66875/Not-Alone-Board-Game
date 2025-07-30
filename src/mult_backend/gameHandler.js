@@ -259,10 +259,12 @@ async function handleRiverChoice(body, connectionId) {
   thisPlayer.playedCardAlt = undefined;
   thisPlayer.playedCard = cardId;
 
-  // Check if any players still need to choose
-  const stillWaiting = game.players.some(
-    p => !p.isCreature && (p.riverActive === true)
+  // Get players still waiting for river choice
+  const waitingPlayers = game.players.filter(
+    p => !p.isCreature && p.riverActive === true
   );
+
+  const stillWaiting = waitingPlayers.length > 0;
 
   if (!stillWaiting) {
     const updatedGame = handleCatching(game);
@@ -279,17 +281,25 @@ async function handleRiverChoice(body, connectionId) {
     console.log('Broadcasted riverComplete');
     return { statusCode: 200 };
   }
+
   await saveGame(game);
 
   await broadcastToRoom(roomId, {
-    type: stillWaiting ? 'gameUpdate' : 'riverComplete',
+    type: 'riverUpdate',
     game,
+    waitingPlayers: waitingPlayers.map(p => ({
+      id: p.id,
+      name: p.name,
+      connectionId: p.connectionId,
+      riverActive: p.riverActive,
+    })),
   });
 
-  console.log(`Broadcasted ${stillWaiting ? 'riverUpdate' : 'riverComplete'}`);
+  console.log(`Broadcasted riverUpdate with ${waitingPlayers.length} still waiting`);
 
   return { statusCode: 200 };
 }
+
 
 
 async function handleStartGame(body, connectionId) {

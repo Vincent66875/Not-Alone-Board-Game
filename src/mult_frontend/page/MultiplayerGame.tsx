@@ -100,9 +100,7 @@ export default function MultiplayerApp() {
   }
   function handleResolution() {
     if (!roomId || !player) return;
-
     console.log('Sending resolutionComplete message');
-
     sendMessage({
       type: 'resolutionComplete',
       roomId,
@@ -147,7 +145,7 @@ export default function MultiplayerApp() {
     console.log("Received: ", latestMessage);
     switch (latestMessage.type) {
       case 'roomUpdate':
-        console.log("debug message: roomUpdate, readyToStart:", latestMessage.readyToStart);
+        // console.log("debug message: roomUpdate, readyToStart:", latestMessage.readyToStart);
         if (latestMessage.players) {
           setPlayers(latestMessage.players);
         }
@@ -156,7 +154,7 @@ export default function MultiplayerApp() {
         }
         break;
       case 'gameReady':
-        console.log("debug message: updating: ", latestMessage.readyToStart, latestMessage.stage);
+        // console.log("debug message: updating: ", latestMessage.readyToStart, latestMessage.stage);
         if (latestMessage.game) {
           updateFromGame(latestMessage.game);
         }
@@ -178,7 +176,6 @@ export default function MultiplayerApp() {
         if (latestMessage.game?.state && latestMessage.game?.players) {
           updateFromGame(latestMessage.game);
         }
-        console.log("Current phase is ", gameState?.phase);
         break;
 
       default:
@@ -321,6 +318,7 @@ export default function MultiplayerApp() {
                         players={players}
                         onContinue={handleResolution}
                         onActivateCard={handleActivateCard}
+                        hasActivated={player.hasActivated}
                       />
                     );
                   }
