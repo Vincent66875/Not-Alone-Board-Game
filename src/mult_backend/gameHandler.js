@@ -191,7 +191,7 @@ async function handleHuntChoice(body, connectionId) {
     return { statusCode: 400, body: 'Missing cardId or tokenType' };
   }
 
-  const game = await getGame(roomId);
+  let game = await getGame(roomId);
   if (!game) {
     console.log('Game not found for room:', roomId);
     return { statusCode: 404, body: 'Game not found' };
