@@ -399,18 +399,18 @@ export function handleReset(game: Game): Game {
   updatedGame.state.board.rescue += 1;
 
   // Reset player state
-  // updatedGame.players = updatedGame.players.map((p) => ({
-  //   id: p.id,
-  //   name: p.name,
-  //   connectionId: p.connectionId,
-  //   hand: p.hand,
-  //   discard: p.discard,
-  //   isCreature: p.isCreature,
-  //   will: p.will,
-  //   survival: p.survival,
-  //   riverActive: p.riverActive,
-  //   artefactActive: p.artefactActive,
-  // }));
+  updatedGame.players = updatedGame.players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    connectionId: p.connectionId,
+    hand: p.hand,
+    discard: p.discard,
+    isCreature: p.isCreature,
+    will: p.will,
+    survival: p.survival,
+    riverActive: p.riverActive,
+    artefactActive: p.artefactActive,
+  }));
 
   updatedGame.state.history.push(`Turn ${updatedGame.state.turn} ended. Starting next turn.`);
 
