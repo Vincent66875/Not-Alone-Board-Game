@@ -8,7 +8,7 @@ const {v4: uuidv4} = require('uuid');
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-const { startGame, initializeGame, handleActivateCard, handleCatching, handleReset } = require('./gameEngine');
+const { startGame, initializeGame, handleActivateCard, handleCatching, handleReset, handleWill } = require('./gameEngine');
 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
@@ -213,7 +213,7 @@ async function handleHuntChoice(body, connectionId) {
     }else{
         game.state.phase = 'resolution';
         console.log("Skip river choice page");
-        handleCatching(game);
+        game = handleCatching(game);
     }
   }
 
@@ -364,6 +364,8 @@ async function handleActivate(body, connectionId) {
     targetPlayerId,
     effectChoice,
   });
+  //Check Will change
+  const checkedGame = handleWill(updatedGame);
 
   // Mark player as activated
   updatedGame.players[thisPlayerIndex].hasActivated = true;
@@ -480,10 +482,10 @@ async function saveGame(game) {
     }));
 }
 
-async function deleteGame(game) {
+async function deleteGame(roomId) {
     await ddb.send(new DeleteCommand({
         TableName: TABLE_GAMES,
-        Key: roomId
+        Key: {roomId}
     }));
 }
 

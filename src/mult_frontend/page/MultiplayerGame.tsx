@@ -195,7 +195,6 @@ export default function MultiplayerApp() {
           onLeave={() => {
             console.log('Sending LeaveGame message');
             handleLeaveGame();
-            sendMessage({ type: 'leaveRoom', roomId, player })
           }}
         />
       )}
