@@ -256,7 +256,7 @@ async function handleRiverChoice(body, connectionId) {
 
   // Update the player's state
   thisPlayer.riverActive = false;
-  thisPlayer.playedCardAlt = undefined;
+  delete thisPlayer.playedCardAlt; // Removes field instead of setting undefined
   thisPlayer.playedCard = cardId;
 
   // Get players still waiting for river choice
@@ -299,8 +299,6 @@ async function handleRiverChoice(body, connectionId) {
 
   return { statusCode: 200 };
 }
-
-
 
 async function handleStartGame(body, connectionId) {
   const { roomId } = body;
