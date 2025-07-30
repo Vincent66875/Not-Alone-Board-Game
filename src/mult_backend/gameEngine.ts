@@ -286,6 +286,7 @@ export function handleActivateCard(
       {
         const selected = options?.selectedCardIds ?? [];
         const valid = selected.length === 1;
+        console.log("Rover ability: adding", selected);
         if (valid) {
           const selectedCard = selected[0];
           const allCards = [...player.hand, ...player.discard];

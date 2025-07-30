@@ -68,7 +68,7 @@ async function handleJoinRoom(body, connectionId) {
             hand: [],
             discard: [],
             isCreature: false,
-            will: 0,
+            will: 3,
             survival: [],
             riverActive: false,
         });
