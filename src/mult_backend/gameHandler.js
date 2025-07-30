@@ -8,7 +8,14 @@ const {v4: uuidv4} = require('uuid');
 const TABLE_GAMES = 'games';
 const TABLE_CONNECTIONS = 'connections';
 
-const { startGame, initializeGame, handleActivateCard, handleCatching, handleReset, handleWill } = require('./gameEngine');
+const { startGame, 
+  initializeGame, 
+  handleActivateCard, 
+  handleCatching, 
+  handleReset, 
+  handleWill,
+  shouldAutoResolve,
+} = require('./gameEngine');
 
 exports.handler = async (event) => {
     const { connectionId } = event.requestContext;
@@ -256,12 +263,20 @@ async function handleRiverChoice(body, connectionId) {
   const stillWaiting = game.players.some(p => !p.isCreature && p.riverActive);
 
   if (!stillWaiting) {
-    // Calculate catching and advance to resolution phase
-    await handleCatching(game);
-    game.state.phase = 'resolution';
-    game.state.history.push('All River choices resolved. Moving to resolution phase.');
-  }
+    const updatedGame = handleCatching(game);
+    updatedGame.state.phase = 'resolution';
+    updatedGame.state.history.push('All River choices resolved. Moving to resolution phase.');
 
+    await saveGame(updatedGame);
+
+    await broadcastToRoom(roomId, {
+      type: 'riverComplete',
+      game: updatedGame,
+    });
+
+    console.log('Broadcasted riverComplete');
+    return { statusCode: 200 };
+  }
   await saveGame(game);
 
   await broadcastToRoom(roomId, {
@@ -339,7 +354,16 @@ async function handleStartGame(body, connectionId) {
 }
 
 async function handleActivate(body, connectionId) {
-  const { roomId, player, cardId, selectedCardIds, selectedSurvivalCard, targetPlayerId, effectChoice } = body;
+  const {
+    roomId,
+    player,
+    cardId,
+    selectedCardIds,
+    selectedSurvivalCard,
+    targetPlayerId,
+    effectChoice,
+  } = body;
+
   if (!roomId || !player?.id || cardId === undefined) {
     return { statusCode: 400, body: 'Missing parameters' };
   }
@@ -349,44 +373,49 @@ async function handleActivate(body, connectionId) {
     return { statusCode: 404, body: 'Game not found' };
   }
 
-  if (!game.players) {
-    return { statusCode: 404, body: 'Players not available' };
-  }
-
   const thisPlayerIndex = game.players.findIndex(p => p.id === player.id);
   if (thisPlayerIndex === -1) {
     return { statusCode: 404, body: 'Player not found' };
   }
 
+  const thisPlayer = game.players[thisPlayerIndex];
+
+  // Apply the effect of the activated card
   const updatedGame = handleActivateCard(game, player.id, cardId, {
     selectedCardIds,
     selectedSurvivalCard,
     targetPlayerId,
     effectChoice,
   });
-  //Check Will change
+
+  // Check Will update
   const checkedGame = handleWill(updatedGame);
 
-  // Mark player as activated
-  updatedGame.players[thisPlayerIndex].hasActivated = true;
+  // Handle Artefact: if active, consume it and allow one more activation
+  if (thisPlayer.artefactActive) {
+    thisPlayer.artefactActive = false;
+    thisPlayer.hasActivated = false; // Not done yet
+  } else {
+    thisPlayer.hasActivated = true;
+  }
 
-  // Check if all players have activated
-  const allActivated = updatedGame.players
-    .filter(p => !p.isCreature) // Skip creature
+  // Check if all non-Creature players are done
+  const allActivated = checkedGame.players
+    .filter(p => !p.isCreature)
     .every(p => p.hasActivated);
 
-  await saveGame(updatedGame);
+  await saveGame(checkedGame);
 
   if (allActivated) {
-    updatedGame.state.phase = 'ended';
+    checkedGame.state.phase = 'ended';
     await broadcastToRoom(roomId, {
       type: 'activationComplete',
-      game: updatedGame,
+      game: checkedGame,
     });
   } else {
     await broadcastToRoom(roomId, {
       type: 'gameUpdate',
-      game: updatedGame,
+      game: checkedGame,
     });
   }
 

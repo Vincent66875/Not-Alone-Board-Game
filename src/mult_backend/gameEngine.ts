@@ -160,7 +160,7 @@ export function handleCatching(game: Game): Game {
 
           case 'a': // Assimilation
             if (player.hand.length > 0) {
-              const removedCard = player.hand.pop(); // Remove last card (or use random if needed)
+              const removedCard = player.hand.pop(); // Remove last card
               updatedGame.state.history.push(
                 `${player.name} was caught by Artemia and discarded Place card ${removedCard}.`
               );
@@ -177,14 +177,40 @@ export function handleCatching(game: Game): Game {
     });
   }
 
+  // Auto-resolve players with no safe card to activate
+  const huntedMap = new Map<number, 'c' | 'a' | 't'>(hunted.map(h => [h.cardId, h.type]));
+
+  for (const player of players) {
+    if (player.isCreature) continue;
+
+    if (shouldAutoResolve(player, huntedMap)) {
+      player.hasActivated = true;
+      updatedGame.state.history.push(`${player.name} had no safe cards to activate.`);
+    }
+  }
+
   if (creatureTriggered) {
     updatedGame.state.board.assimilation += 1;
     updatedGame.state.history.push(`The Creature advanced the Assimilation token by 1.`);
     return handleWill(updatedGame);
   }
-  // Otherwise, just return the updatedGame without calling handleWill
+
+  // Otherwise, just return the updated game
   return updatedGame;
 }
+
+export function shouldAutoResolve(player: Player, huntedMap: Map<number, 'c' | 'a' | 't'>): boolean {
+  const played = player.playedCard;
+  const alt = player.playedCardAlt;
+
+  // If all played cards are hunted or undefined, nothing to activate
+  const safeCards = [played, alt].filter(
+    cardId => cardId !== undefined && !huntedMap.has(cardId!)
+  );
+
+  return safeCards.length === 0;
+}
+
 export function handleWill(game: Game): Game {
   const updatedGame = { ...game };
   let numRestored = 0;
