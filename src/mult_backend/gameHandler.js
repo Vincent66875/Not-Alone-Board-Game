@@ -477,10 +477,25 @@ async function getGame(roomId) {
 }
 
 async function saveGame(game) {
+  try {
     await ddb.send(new PutCommand({
-        TableName: TABLE_GAMES,
-        Item: game,
+      TableName: TABLE_GAMES,
+      Item: game,
     }));
+  } catch (err) {
+    console.error('Error saving game:', err);
+
+    // Broadcast debug info to all clients in the room
+    if (game?.roomId) {
+      await debugBroadcast(game.roomId, `Error saving game: ${err.message}`);
+
+      // Optionally log full game state (or just problematic parts like players or state)
+      await debugBroadcast(game.roomId, `Game snapshot: ${JSON.stringify(game, null, 2)}`);
+    }
+
+    // Re-throw if needed
+    throw err;
+  }
 }
 
 async function deleteGame(roomId) {
