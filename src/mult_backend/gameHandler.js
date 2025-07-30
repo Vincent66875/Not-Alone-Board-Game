@@ -378,7 +378,7 @@ async function handleActivate(body, connectionId) {
   await saveGame(updatedGame);
 
   if (allActivated) {
-    updatedGame.state.phase = 'endTurn';
+    updatedGame.state.phase = 'ended';
     await broadcastToRoom(roomId, {
       type: 'activationComplete',
       game: updatedGame,
