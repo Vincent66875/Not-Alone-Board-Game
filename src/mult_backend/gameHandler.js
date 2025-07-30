@@ -358,7 +358,6 @@ async function handleActivate(body, connectionId) {
     return { statusCode: 404, body: 'Player not found' };
   }
 
-  game.state.history.push(`${player.name} is activating card ${cardId}.`);
   const updatedGame = handleActivateCard(game, player.id, cardId, {
     selectedCardIds,
     selectedSurvivalCard,

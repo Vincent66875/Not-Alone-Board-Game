@@ -180,14 +180,17 @@ export function handleCatching(game: Game): Game {
   if (creatureTriggered) {
     updatedGame.state.board.assimilation += 1;
     updatedGame.state.history.push(`The Creature advanced the Assimilation token by 1.`);
+    return handleWill(updatedGame);
   }
-  return handleWill(updatedGame);
+  // Otherwise, just return the updatedGame without calling handleWill
+  return updatedGame;
 }
 export function handleWill(game: Game): Game {
   const updatedGame = { ...game };
-
+  let numRestored = 0;
   updatedGame.players = updatedGame.players.map(player => {
     if (!player.isCreature && player.will <= 0) {
+      numRestored += 1;
       return {
         ...player,
         will: 3,
@@ -198,7 +201,6 @@ export function handleWill(game: Game): Game {
     return player;
   });
 
-  const numRestored = updatedGame.players.filter(p => !p.isCreature && p.will === 3).length;
   if (numRestored > 0) {
     updatedGame.state.board.assimilation += numRestored;
     updatedGame.state.history.push(`${numRestored} player(s) exhausted and restored. Assimilation +${numRestored}.`);
