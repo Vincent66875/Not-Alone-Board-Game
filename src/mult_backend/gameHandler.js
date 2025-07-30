@@ -408,14 +408,6 @@ async function handleEndTurn(body, connectionId) {
   }
 
   const updatedGame = handleReset(game);
-    updatedGame.players = updatedGame.players.map((p) => ({
-    ...p,
-    playedCard: undefined,
-    playedCardAlt: undefined,
-    riverActive: false,
-    artefactActive: false,
-    hasActivated: false,
-  }));
 
   await saveGame(updatedGame);
 
@@ -428,6 +420,7 @@ async function handleEndTurn(body, connectionId) {
 
   return { statusCode: 200 };
 }
+
 
 async function handleLeaveGame(body, connectionId) {
     const { roomId, playerId } = body;
