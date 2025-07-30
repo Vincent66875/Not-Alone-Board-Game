@@ -169,6 +169,7 @@ export default function MultiplayerApp() {
         if (latestMessage.game?.state && latestMessage.game?.players) {
           updateFromGame(latestMessage.game);
         }
+        console.log("Current phase is ", gameState?.phase);
         break;
 
       default:

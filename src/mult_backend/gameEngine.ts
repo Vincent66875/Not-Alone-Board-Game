@@ -181,8 +181,7 @@ export function handleCatching(game: Game): Game {
     updatedGame.state.board.assimilation += 1;
     updatedGame.state.history.push(`The Creature advanced the Assimilation token by 1.`);
   }
-
-  return updatedGame;
+  return handleWill(updatedGame);
 }
 export function handleWill(game: Game): Game {
   const updatedGame = { ...game };
@@ -373,6 +372,13 @@ export function handleActivateCard(
 export function handleReset(game: Game): Game {
   const updatedGame = { ...game };
 
+  // Check for game end condition before resetting
+  if (updatedGame.state.board.assimilation >= 10 || updatedGame.state.board.rescue >= 10) {
+    updatedGame.state.phase = 'ended';
+    updatedGame.state.history.push(`Game ended. ${updatedGame.state.board.assimilation >= 10 ? 'Creature' : 'Survivors'} win.`);
+    return updatedGame;
+  }
+
   // Clear phase and increment turn
   updatedGame.state.phase = 'planning';
   updatedGame.state.turn += 1;
@@ -387,15 +393,6 @@ export function handleReset(game: Game): Game {
   // Advance rescue track
   updatedGame.state.board.rescue += 1;
 
-  // Reset player turn data
-  updatedGame.players = updatedGame.players.map((p) => ({
-    ...p,
-    playedCard: undefined,
-    playedCardAlt: undefined,
-    riverActive: false,
-    artefactActive: false,
-    hasActivated: false,
-  }));
   updatedGame.state.history.push(`Turn ${updatedGame.state.turn} ended. Starting next turn.`);
 
   return updatedGame;
