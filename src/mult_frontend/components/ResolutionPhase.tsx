@@ -6,6 +6,7 @@ type ResolutionPageProps = {
   player: Player;
   players: Player[];
   gameState: GameState;
+  hasActivated?: boolean;          // pass this prop from parent to track if player finished activating
   onContinue: () => void;
   onActivateCard: (
     cardId: number,
@@ -14,6 +15,7 @@ type ResolutionPageProps = {
       selectedSurvivalCard?: string;
       targetPlayerId?: string;
       effectChoice?: 'heal' | 'survival';
+      lairChoice?: 'creature' | 'lair';
     }
   ) => void;
 };
@@ -22,6 +24,7 @@ export default function ResolutionPage({
   player,
   players,
   gameState,
+  hasActivated,
   onContinue,
   onActivateCard,
 }: ResolutionPageProps) {
@@ -30,15 +33,18 @@ export default function ResolutionPage({
   );
   const creatureCardId = gameState.huntedLocations?.find(h => h.type === 'c')?.cardId ?? 1;
 
+  const playedCardId = player.playedCard;
+  const altCardId = player.playedCardAlt;
+  if(!hasActivated){
+    hasActivated = false;
+  }
+
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [targetPlayerId, setTargetPlayerId] = useState<string | null>(null);
   const [effectChoice, setEffectChoice] = useState<'heal' | 'survival' | null>(null);
   const [survivalOptions, setSurvivalOptions] = useState<number[]>([]);
   const [lairChoice, setLairChoice] = useState<'creature' | 'lair' | null>(null);
-
-  const playedCardId = player.playedCard;
-  const altCardId = player.playedCardAlt;
 
   const isCardActivatable = (cardId: number) =>
     cardId !== undefined &&
@@ -51,6 +57,7 @@ export default function ResolutionPage({
       setSelectedCardIds([]);
       setTargetPlayerId(null);
       setEffectChoice(null);
+      setLairChoice(null);
     }
   }
 
@@ -64,21 +71,33 @@ export default function ResolutionPage({
     if (selectedCard === null) return;
 
     const options: any = {};
-    if ([2, 5, 6].includes(selectedCard)) options.selectedCardIds = selectedCardIds;
+
+    if ([2, 5, 6].includes(selectedCard)) {
+      options.selectedCardIds = selectedCardIds;
+    }
+
     if (selectedCard === 7 && selectedCardIds.length === 1) {
       options.selectedSurvivalCard = `survival_card_${selectedCardIds[0]}`;
     }
+
     if (selectedCard === 9) {
-      options.effectChoice = effectChoice;
-      if (effectChoice === 'heal' && selectedCardIds.length === 1) {
-        options.targetPlayerId = selectedCardIds[0];
+      if (effectChoice) options.effectChoice = effectChoice;
+      if (effectChoice === 'heal' && targetPlayerId) {
+        options.targetPlayerId = targetPlayerId;
       }
     }
+
+    if (selectedCard === 1 && lairChoice) {
+      options.lairChoice = lairChoice;
+    }
+
     onActivateCard(selectedCard, options);
+
     setSelectedCard(null);
     setSelectedCardIds([]);
     setTargetPlayerId(null);
     setEffectChoice(null);
+    setLairChoice(null);
   }
 
   function cancelActivation() {
@@ -86,12 +105,13 @@ export default function ResolutionPage({
     setSelectedCardIds([]);
     setTargetPlayerId(null);
     setEffectChoice(null);
+    setLairChoice(null);
   }
 
   const discardOptions = player.discard.filter(c => c !== selectedCard);
 
-  useEffect(()=> {
-    if(selectedCard === 7){
+  useEffect(() => {
+    if (selectedCard === 7) {
       const shuffled = [1, 2, 3].sort(() => 0.5 - Math.random());
       setSurvivalOptions(shuffled.slice(0, 2));
       setSelectedCardIds([]);
@@ -141,10 +161,10 @@ export default function ResolutionPage({
         })}
       </div>
 
-      {/* Activation Modal */}
       {selectedCard !== null && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex flex-col items-center justify-center">
           <h3 className="text-xl font-bold mb-4">Activate Card {selectedCard}</h3>
+
           {selectedCard === 1 && (
             <div className="flex flex-col items-center gap-4 mb-4">
               <p className="mb-2">Activate card 1 ability or the card with Creature token?</p>
@@ -169,9 +189,7 @@ export default function ResolutionPage({
 
               {lairChoice === 'creature' && (
                 <div className="mt-4">
-                  <p>
-                    Creature token is on card {creatureCardId}.
-                  </p>
+                  <p>Creature token is on card {creatureCardId}.</p>
                   <img
                     src={`/cards/${allLocations[creatureCardId - 1]}.png`}
                     alt={`Creature card ${creatureCardId}`}
@@ -182,7 +200,6 @@ export default function ResolutionPage({
             </div>
           )}
 
-          {/* Jungle (2) or Swamp (6) */}
           {[2, 6].includes(selectedCard) && (
             <div className="flex flex-wrap gap-3 mb-4">
               {discardOptions.map(c => (
@@ -199,7 +216,6 @@ export default function ResolutionPage({
             </div>
           )}
 
-          {/* Rover (5) — pick one from reserve (here assume discarded) */}
           {selectedCard === 5 && (
             <div className="flex flex-wrap gap-3 mb-4">
               {[6, 7, 8, 9, 10]
@@ -212,18 +228,16 @@ export default function ResolutionPage({
                     className={`w-20 h-auto rounded cursor-pointer ${
                       selectedCardIds.includes(c) ? 'border-4 border-yellow-400' : ''
                     }`}
-                    onClick={() => setSelectedCardIds([c])} // Allow only one selection
+                    onClick={() => setSelectedCardIds([c])} // single selection only
                   />
                 ))}
             </div>
           )}
 
-
-          {/* Shelter (7): survival cards (dummy options) */}
           {selectedCard === 7 && (
             <div className="flex flex-col items-center gap-4 mb-4">
               <div className="flex gap-4 mb-4">
-                {survivalOptions.map((cardNum) => (
+                {survivalOptions.map(cardNum => (
                   <img
                     key={cardNum}
                     src={`/cards/survival_card_${cardNum}.png`}
@@ -232,13 +246,13 @@ export default function ResolutionPage({
                       selectedCardIds[0] === cardNum ? 'border-4 border-yellow-400' : ''
                     }`}
                     onClick={() => setSelectedCardIds([cardNum])}
-                  />))}
+                  />
+                ))}
               </div>
               <p className="text-sm text-gray-300">Choose 1 Survival card</p>
             </div>
           )}
 
-          {/* Source (9) */}
           {selectedCard === 9 && (
             <>
               <div className="flex gap-4 mb-2">
@@ -246,7 +260,11 @@ export default function ResolutionPage({
                   className={`px-4 py-2 rounded ${
                     effectChoice === 'heal' ? 'bg-yellow-600' : 'bg-gray-700'
                   }`}
-                  onClick={() => setEffectChoice('heal')}
+                  onClick={() => {
+                    setEffectChoice('heal');
+                    setSelectedCardIds([]);
+                    setTargetPlayerId(null);
+                  }}
                 >
                   Heal
                 </button>
@@ -257,6 +275,7 @@ export default function ResolutionPage({
                   onClick={() => {
                     setEffectChoice('survival');
                     setSelectedCardIds([]);
+                    setTargetPlayerId(null);
                   }}
                 >
                   Draw Survival
@@ -277,7 +296,7 @@ export default function ResolutionPage({
                   ))}
                 </div>
               )}
-              {effectChoice === 'heal' && selectedCardIds.length === 0 && (
+              {effectChoice === 'heal' && !targetPlayerId && (
                 <p className="text-sm text-red-400">Select a player to heal</p>
               )}
             </>
@@ -285,31 +304,22 @@ export default function ResolutionPage({
 
           {[3, 4, 8, 10].includes(selectedCard) && (
             <div className="bg-gray-800 rounded p-4 max-w-md text-center">
-            {selectedCard === 3 && (
-              <p>
-                Card 3 (River): Activate to play 2 place cards next turn, then
-                reveal one and return the other.
-              </p>
-            )}
-            {selectedCard === 4 && (
-              <p>
-                Card 4 (Beach):{' '}
-                {gameState.board.beachMarker
-                  ? 'Removing the marker will advance the Rescue token.'
-                  : 'Placing a marker to block progress.'}
-              </p>
-            )}
-            {selectedCard === 8 && (
-              <p>
-                Card 8 (Wreck): Move Rescue token forward by 1 space.
-              </p>
-            )}
-            {selectedCard === 10 && (
-              <p>
-                Card 10 (Artefact): Activate artefact ability next turn.
-              </p>
-            )}
-          </div>
+              {selectedCard === 3 && (
+                <p>
+                  Card 3 (River): Activate to play 2 place cards next turn, then reveal one and return the other.
+                </p>
+              )}
+              {selectedCard === 4 && (
+                <p>
+                  Card 4 (Beach):{' '}
+                  {gameState.board.beachMarker
+                    ? 'Removing the marker will advance the Rescue token.'
+                    : 'Placing a marker to block progress.'}
+                </p>
+              )}
+              {selectedCard === 8 && <p>Card 8 (Wreck): Move Rescue token forward by 1 space.</p>}
+              {selectedCard === 10 && <p>Card 10 (Artefact): Activate artefact ability next turn.</p>}
+            </div>
           )}
 
           <div className="flex gap-6">
@@ -321,8 +331,8 @@ export default function ResolutionPage({
                 (selectedCard === 6 && selectedCardIds.length !== 2) ||
                 (selectedCard === 5 && selectedCardIds.length !== 1) ||
                 (selectedCard === 7 && selectedCardIds.length !== 1) ||
-                (selectedCard === 9 &&
-                  (!effectChoice || (effectChoice === 'heal' && !targetPlayerId)))
+                (selectedCard === 9 && (!effectChoice || (effectChoice === 'heal' && !targetPlayerId))) ||
+                (selectedCard === 1 && !lairChoice)
               }
             >
               Confirm
@@ -341,7 +351,7 @@ export default function ResolutionPage({
         <p className="text-yellow-300 mt-6">You didn’t play a card this turn.</p>
       )}
 
-      {playedCardId && huntedMap.has(playedCardId) && (
+      {playedCardId && hasActivated && (
         <button
           className="mt-6 px-6 py-2 bg-blue-600 rounded hover:bg-blue-700"
           onClick={onContinue}
