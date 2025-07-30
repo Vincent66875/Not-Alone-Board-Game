@@ -392,13 +392,12 @@ async function handleActivate(body, connectionId) {
   const checkedGame = handleWill(updatedGame);
 
   // Handle Artefact: if active, consume it and allow one more activation
-  if (thisPlayer.artefactActive) {
+  if (thisPlayer.artefactActive === true) {
     thisPlayer.artefactActive = false;
-    thisPlayer.hasActivated = false; // Not done yet
+    thisPlayer.hasActivated = false; // allow second activation
   } else {
     thisPlayer.hasActivated = true;
   }
-
   // Check if all non-Creature players are done
   const allActivated = checkedGame.players
     .filter(p => !p.isCreature)
