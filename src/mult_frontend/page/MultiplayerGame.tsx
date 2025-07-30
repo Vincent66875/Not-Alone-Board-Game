@@ -109,16 +109,25 @@ export default function MultiplayerApp() {
       playerId: player.id,
     });
   }
-  function handleActivateCard(cardId: number) {
+  function handleActivateCard(
+    cardId: number,
+    options?: {
+      selectedCardIds?: number[];
+      selectedSurvivalCard?: string;
+      targetPlayerId?: string;
+      effectChoice?: 'heal' | 'survival';
+    }
+  ) {
     if (!roomId || !player) return;
 
-    console.log(`Activating card ${cardId}`);
+    console.log(`Activating card ${cardId} with options:`, options);
 
     sendMessage({
       type: 'activateCard',
       roomId,
       player: { id: player.id },
       cardId,
+      ...options,
     });
   }
   function handleEnding() {
