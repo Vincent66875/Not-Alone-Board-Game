@@ -202,19 +202,22 @@ export default function ResolutionPage({
           {/* Rover (5) — pick one from reserve (here assume discarded) */}
           {selectedCard === 5 && (
             <div className="flex flex-wrap gap-3 mb-4">
-              {[6, 7, 8, 9, 10].filter(c => !player.hand.includes(c) && !player.discard.includes(c)).map(c => (
-                <img
-                  key={c}
-                  src={`/cards/${allLocations[c - 1]}.png`}
-                  alt={`Option ${c}`}
-                  className={`w-20 h-auto rounded cursor-pointer ${
-                    selectedCardIds.includes(c) ? 'border-4 border-yellow-400' : ''
-                  }`}
-                  onClick={() => toggleSelectCard(c)}
-                />
-              ))}
+              {[6, 7, 8, 9, 10]
+                .filter(c => !player.hand.includes(c) && !player.discard.includes(c))
+                .map(c => (
+                  <img
+                    key={c}
+                    src={`/cards/${allLocations[c - 1]}.png`}
+                    alt={`Option ${c}`}
+                    className={`w-20 h-auto rounded cursor-pointer ${
+                      selectedCardIds.includes(c) ? 'border-4 border-yellow-400' : ''
+                    }`}
+                    onClick={() => setSelectedCardIds([c])} // Allow only one selection
+                  />
+                ))}
             </div>
           )}
+
 
           {/* Shelter (7): survival cards (dummy options) */}
           {selectedCard === 7 && (

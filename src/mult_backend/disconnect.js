@@ -53,7 +53,7 @@ exports.handler = async (event) => {
     
     const game = gameResult.Item;
 
-    game.players = game.players.filter(player => player.connectionId != connectionId);
+    game.players = game.players.filter(player => player.connectionId !== connectionId);
 
     if (game.state.phase !== 'lobby') {
       await ddbDocClient.send(new DeleteCommand({
@@ -62,11 +62,18 @@ exports.handler = async (event) => {
       }));
       console.log(`Deleted game ${roomId} due to player disconnect during active game`);
     } else {
-      game.players = game.players.filter(player => player.connectionId !== connectionId);
-      await ddbDocClient.send(new PutCommand({
-        TableName: TABLE_GAMES,
-        Item: game
-      }));
+      if (game.players.length === 0) {
+        await ddbDocClient.send(new DeleteCommand({
+          TableName: TABLE_GAMES,
+          Key: { roomId }
+        }));
+        console.log(`Deleted empty game ${roomId}`);
+      } else {
+        await ddbDocClient.send(new PutCommand({
+          TableName: TABLE_GAMES,
+          Item: game
+        }));
+      }
     }
 
     console.log(`Deleted connection ${connectionId}`);
