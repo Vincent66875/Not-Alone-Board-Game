@@ -200,7 +200,9 @@ export default function ResolutionPage({
             </div>
           )}
 
-          {[2, 6].includes(selectedCard) && (
+          {[2, 6].includes(selectedCard) && discardOptions.length === 0 ? (
+            <p className="text-red-400 mb-4">You have no cards in your discard pile to select.</p>
+          ) : (
             <div className="flex flex-wrap gap-3 mb-4">
               {discardOptions.map(c => (
                 <img
@@ -349,15 +351,6 @@ export default function ResolutionPage({
 
       {!playedCardId && (
         <p className="text-yellow-300 mt-6">You didn’t play a card this turn.</p>
-      )}
-
-      {playedCardId && hasActivated && (
-        <button
-          className="mt-6 px-6 py-2 bg-blue-600 rounded hover:bg-blue-700"
-          onClick={onContinue}
-        >
-          Continue
-        </button>
       )}
     </div>
   );
