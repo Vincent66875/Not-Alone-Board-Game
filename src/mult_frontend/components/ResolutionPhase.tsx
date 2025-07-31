@@ -25,7 +25,6 @@ export default function ResolutionPage({
   players,
   gameState,
   hasActivated,
-  onContinue,
   onActivateCard,
 }: ResolutionPageProps) {
   const huntedMap = new Map<number, 'c' | 'a' | 't'>(
@@ -329,8 +328,8 @@ export default function ResolutionPage({
               className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               onClick={confirmActivation}
               disabled={
-                (selectedCard === 2 && selectedCardIds.length !== 1) ||
-                (selectedCard === 6 && selectedCardIds.length !== 2) ||
+                (selectedCard === 2 && selectedCardIds.length !== 1 && player.discard.length > 0) ||
+                (selectedCard === 6 && selectedCardIds.length !== 2 && player.discard.length > 0)||
                 (selectedCard === 5 && selectedCardIds.length !== 1) ||
                 (selectedCard === 7 && selectedCardIds.length !== 1) ||
                 (selectedCard === 9 && (!effectChoice || (effectChoice === 'heal' && !targetPlayerId))) ||

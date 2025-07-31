@@ -248,7 +248,6 @@ export function handleActivateCard(
 ): Game {
   const updatedGame = { ...game };
   const playerIndex = updatedGame.players.findIndex(p => p.id === pid);
-
   const player = { ...updatedGame.players[playerIndex] };
 
   if (!player) {
@@ -260,109 +259,109 @@ export function handleActivateCard(
     return game;
   }
 
-  //hand -> discard
-  player.hand = player.hand.filter((id) => id !== cardId);
+  // Move card from hand to discard
+  player.hand = player.hand.filter(id => id !== cardId);
   player.discard.push(cardId);
   player.playedCard = cardId;
 
   switch (cardId) {
-    case 1:
-      // Lair recover all place cards except Lair
-      {
-        player.hand.push(...player.discard.filter((c) => c !== 1));
-        player.discard = [1];
-        updatedGame.state.history.push(`${player.name} take back all cards except 1`);
-      }
+    case 1: {
+      // Lair: recover all cards except itself
+      player.hand.push(...player.discard.filter(c => c !== 1));
+      player.discard = [1];
+      updatedGame.state.history.push(`${player.name} took back all cards except Lair.`);
       break;
+    }
 
-    case 2:
-      // Return Jungle and 1 other from discards
-      {  
-        const selected = options?.selectedCardIds ?? [];
-        const valid = selected.length === 1 && player.discard.includes(selected[0]);
-        if (valid) {
-          player.hand.push(2, selected[0]);
-          player.discard = player.discard.filter(c => ![2, selected[0]].includes(c));
-          updatedGame.state.history.push(`${player.name} used Jungle to recover ${selected[0]}`);
+    case 2: {
+      // Jungle: return itself + 1 selected card from discard (or just itself)
+      const selected = options?.selectedCardIds ?? [];
+      const valid = selected.length === 1 && player.discard.includes(selected[0]);
+
+      if (valid) {
+        player.hand.push(2, selected[0]);
+        player.discard = player.discard.filter(c => ![2, selected[0]].includes(c));
+        updatedGame.state.history.push(`${player.name} used Jungle to recover ${selected[0]}.`);
+      } else {
+        // Only return Jungle itself
+        if (player.discard.includes(2)) {
+          player.hand.push(2);
+          player.discard = player.discard.filter(c => c !== 2);
+          updatedGame.state.history.push(`${player.name} played Jungle without a valid selection — only Jungle was recovered.`);
+          console.warn(`${player.name} played Jungle without valid selection. Only Jungle returned.`);
+        } else {
+          console.warn(`${player.name} tried to activate Jungle but Jungle was not in discard.`);
+          updatedGame.state.history.push(`${player.name} played Jungle but it wasn't in discard. No cards recovered.`);
         }
       }
       break;
+    }
 
-    case 3: // Mark River
-      {
-        player.riverActive = true;
-        updatedGame.state.history.push(`${player.name} activate river ability`);
-      }
+    case 3: {
+      player.riverActive = true;
+      updatedGame.state.history.push(`${player.name} activated River.`);
       break;
+    }
 
-    case 4: // Beach
+    case 4: {
       if (!updatedGame.state.effectsUsed?.beachUsed) {
+        updatedGame.state.board.beachMarker = !updatedGame.state.board.beachMarker;
         if (!updatedGame.state.board.beachMarker) {
-          updatedGame.state.board.beachMarker = true;
-        } else {
-          updatedGame.state.board.beachMarker = false;
           updatedGame.state.history.push(`${player.name} advanced the Rescue token via Beach.`);
         }
         updatedGame.state.effectsUsed = { ...updatedGame.state.effectsUsed, beachUsed: true };
       } else {
-        updatedGame.state.history.push(`${player.name} used Beach, but its effect was already used this turn.`);
+        updatedGame.state.history.push(`${player.name} used Beach, but the effect was already used this turn.`);
       }
       break;
+    }
 
-    case 5: // Rover
-      // Placeholder: add a new card to hand from reserve (handled by UI later)
-      {
-        const selected = options?.selectedCardIds ?? [];
-        const valid = selected.length === 1;
-        console.log("Rover ability: adding", selected);
-        if (valid) {
-          const selectedCard = selected[0];
-          const allCards = [...player.hand, ...player.discard];
-
-          if (!allCards.includes(selectedCard)) {
-            player.hand.push(selectedCard);
-            updatedGame.state.history.push(`${player.name} used Rover to gain card ${selectedCard}.`);
-          } else {
-            updatedGame.state.history.push(`${player.name} already owns card ${selectedCard}, Rover effect skipped.`);
-          }
+    case 5: {
+      const selected = options?.selectedCardIds ?? [];
+      const valid = selected.length === 1;
+      if (valid) {
+        const selectedCard = selected[0];
+        const allCards = [...player.hand, ...player.discard];
+        if (!allCards.includes(selectedCard)) {
+          player.hand.push(selectedCard);
+          updatedGame.state.history.push(`${player.name} used Rover to gain card ${selectedCard}.`);
         } else {
-          updatedGame.state.history.push(`${player.name} played Rover but did not select a valid card.`);
+          updatedGame.state.history.push(`${player.name} already owns card ${selectedCard}, Rover effect skipped.`);
         }
+      } else {
+        updatedGame.state.history.push(`${player.name} played Rover but did not select a valid card.`);
       }
       break;
+    }
 
-    case 6: // Return Swamp and 2 other from discard
-      {
-        const selected = options?.selectedCardIds ?? [];
-        const valid = selected.length === 2 && selected.every(c => player.discard.includes(c));
-        if (valid) {
-          player.hand.push(6, ...selected);
-          player.discard = player.discard.filter(c => ![6, ...selected].includes(c));
-          updatedGame.state.history.push(`${player.name} used Swamp to recover ${selected.join(', ')}`);
-        }
+    case 6: {
+      const selected = options?.selectedCardIds ?? [];
+      const valid = selected.length === 2 && selected.every(c => player.discard.includes(c));
+      if (valid) {
+        player.hand.push(6, ...selected);
+        player.discard = player.discard.filter(c => ![6, ...selected].includes(c));
+        updatedGame.state.history.push(`${player.name} used Swamp to recover ${selected.join(', ')}.`);
       }
       break;
+    }
 
-    case 7: // Shelter: draw 2 survival, keep 1 (requires UI)
-      {
-        const card = options?.selectedSurvivalCard;
-        if (card) {
-          player.survival.push(card);
-          updatedGame.state.history.push(`${player.name} chose a Survival card.`);
-        }
+    case 7: {
+      const card = options?.selectedSurvivalCard;
+      if (card) {
+        player.survival.push(card);
+        updatedGame.state.history.push(`${player.name} chose a Survival card.`);
       }
       break;
-    
-    case 8: //Wreck
-      {
-        updatedGame.state.board.rescue += 1;
-        updatedGame.state.history.push(`${player.name} move rescue counter by 1`);
-      }
-      break;
+    }
 
-    case 9: { // Source: heal player or draw one survival card
+    case 8: {
+      updatedGame.state.board.rescue += 1;
+      updatedGame.state.history.push(`${player.name} moved the Rescue token by 1.`);
+      break;
+    }
+
+    case 9: {
       const choice = options?.effectChoice;
-
       if (choice === 'heal') {
         const targetId = options?.targetPlayerId;
         const target = updatedGame.players.find(p => p.id === targetId);
@@ -372,23 +371,21 @@ export function handleActivateCard(
         } else {
           updatedGame.state.history.push(`${player.name} tried to heal, but target not found.`);
         }
-
       } else if (choice === 'survival') {
-        const randomCard = Math.floor(Math.random() * 3) + 1; // 1–3
+        const randomCard = Math.floor(Math.random() * 3) + 1;
         player.survival.push(randomCard);
-        updatedGame.state.history.push(`${player.name} used Source to draw a Survival card (${randomCard}).`);
+        updatedGame.state.history.push(`${player.name} drew a Survival card (${randomCard}).`);
       } else {
-        updatedGame.state.history.push(`${player.name} played Source, but made no valid choice.`);
-      }
-    }
-    break;
-
-    case 10:
-      {
-        player.artefactActive = true;
-        updatedGame.state.history.push(`${player.name} activate artefact ability`);
+        updatedGame.state.history.push(`${player.name} played Source but made no valid choice.`);
       }
       break;
+    }
+
+    case 10: {
+      player.artefactActive = true;
+      updatedGame.state.history.push(`${player.name} activated Artefact.`);
+      break;
+    }
 
     default:
       break;

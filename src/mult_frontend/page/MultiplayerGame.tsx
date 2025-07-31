@@ -98,15 +98,6 @@ export default function MultiplayerApp() {
       cardId,
     })
   }
-  function handleResolution() {
-    if (!roomId || !player) return;
-    console.log('Sending resolutionComplete message');
-    sendMessage({
-      type: 'resolutionComplete',
-      roomId,
-      playerId: player.id,
-    });
-  }
   function handleActivateCard(
     cardId: number,
     options?: {
@@ -316,7 +307,6 @@ export default function MultiplayerApp() {
                         gameState={gameState}
                         player={player}
                         players={players}
-                        onContinue={handleResolution}
                         onActivateCard={handleActivateCard}
                         hasActivated={player.hasActivated}
                       />
