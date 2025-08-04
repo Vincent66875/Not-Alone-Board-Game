@@ -1,5 +1,5 @@
 # 🪐 Not Alone - Online Multiplayer Board Game
-
+![Alt text](/public/thegame.jpg)
 A web adaptation of the board game *Not Alone*, built with **React**, **TypeScript**, and **AWS**.  
 Supports both **single-player (vs AI)** and **real-time multiplayer** modes.
 
