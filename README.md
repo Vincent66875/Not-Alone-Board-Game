@@ -1,9 +1,64 @@
-# H1 Header (Big)
+# 🪐 Not Alone - Online Multiplayer Board Game
 
-## H2 Header (Medium)
+A web adaptation of the board game *Not Alone*, built with **React**, **TypeScript**, and **AWS**.  
+Supports both **single-player (vs AI)** and **real-time multiplayer** modes.
 
-### H3 Header (Smaller)
+This is a side project I built over the course of a month to explore:
+- 🧩 Real-time multiplayer logic with WebSockets  
+- ☁️ Serverless backend infrastructure  
+- ♻️ Scalable game state management
 
-Normal text here.
+> 🚧 **Note:** The game is still in development. Some cards and features are not fully implemented yet, and the UI is in a rough early stage. Feedback welcome!
 
-**Bold text** (just bold, not bigger)
+---
+
+## 🎮 Features
+
+### ✅ Implemented
+- 🔁 Turn-based card game engine  
+- 🤖 Single-player mode with basic AI opponent  
+- 🌐 Multiplayer mode using WebSockets via AWS API Gateway  
+- 🧍‍♂️ Real-time room joining and phase updates  
+- 🧠 Serverless backend using AWS Lambda + DynamoDB  
+- 💻 Basic frontend using React + TypeScript  
+- ⚙️ Automated deployment via GitHub Actions  
+
+### 🔜 Coming Soon
+- 🧬 Full Survivor/Creature card effect support  
+- 📜 Game log & animations  
+- 🧯 Improved error handling  
+
+---
+
+## 🧪 Try It Out
+
+🌍 **Live Demo:** [https://not-alone-board-game.vercel.app/](https://not-alone-board-game.vercel.app/)  
+📁 **GitHub Repo:** [this repo]
+
+You can play solo or share a room code with a friend to test multiplayer mode.
+
+---
+
+## 🛠 Tech Stack
+
+### 🖥️ Frontend
+- React + TypeScript  
+- Tailwind CSS *(if used)*  
+- WebSocket client  
+
+### 🔧 Backend
+- AWS Lambda (Node.js)  
+- Amazon DynamoDB  
+- API Gateway WebSocket API  
+
+### 🚀 DevOps
+- GitHub Actions (CI/CD)  
+- Vercel for frontend hosting  
+
+---
+
+## 🙏 Feedback Welcome!
+
+If you find a bug or have suggestions, feel free to open an issue or reach out.  
+Thanks for checking it out!
+
