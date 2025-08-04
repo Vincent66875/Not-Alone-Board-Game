@@ -7,7 +7,6 @@ type ResolutionPageProps = {
   players: Player[];
   gameState: GameState;
   hasActivated?: boolean;          // pass this prop from parent to track if player finished activating
-  onContinue: () => void;
   onActivateCard: (
     cardId: number,
     options?: {
@@ -46,6 +45,7 @@ export default function ResolutionPage({
   const [lairChoice, setLairChoice] = useState<'creature' | 'lair' | null>(null);
 
   const isCardActivatable = (cardId: number) =>
+    !hasActivated &&
     cardId !== undefined &&
     !huntedMap.has(cardId) &&
     (playedCardId === cardId || altCardId === cardId);
@@ -136,10 +136,12 @@ export default function ResolutionPage({
               className={`relative flex flex-col items-center p-2 rounded-xl shadow-lg transition-transform duration-150 ${
                 isPlayed
                   ? isSafe
-                    ? 'border-4 border-green-400 cursor-pointer animate-pulse'
+                    ? 'border-4 border-green-400 animate-pulse'
                     : 'border-4 border-red-500'
                   : ''
-              } ${isHunted ? 'grayscale' : ''}`}
+              } ${isCardActivatable(cardId) ? 'cursor-pointer' : 'opacity-50'} ${
+                isHunted ? 'grayscale' : ''
+              }`}
               onClick={() => handleCardClick(cardId)}
             >
               <div className="text-sm mb-2">Location {cardId}</div>
@@ -199,23 +201,26 @@ export default function ResolutionPage({
             </div>
           )}
 
-          {[2, 6].includes(selectedCard) && discardOptions.length === 0 ? (
-            <p className="text-red-400 mb-4">You have no cards in your discard pile to select.</p>
-          ) : (
-            <div className="flex flex-wrap gap-3 mb-4">
-              {discardOptions.map(c => (
-                <img
-                  key={c}
-                  src={`/cards/${allLocations[c - 1]}.png`}
-                  alt={`Option ${c}`}
-                  className={`w-20 h-auto rounded cursor-pointer ${
-                    selectedCardIds.includes(c) ? 'border-4 border-yellow-400' : ''
-                  }`}
-                  onClick={() => toggleSelectCard(c)}
-                />
-              ))}
-            </div>
+          {[2, 6].includes(selectedCard) && (
+            discardOptions.length === 0 ? (
+              <p className="text-red-400 mb-4">You have no cards in your discard pile to select.</p>
+            ) : (
+              <div className="flex flex-wrap gap-3 mb-4">
+                {discardOptions.map(c => (
+                  <img
+                    key={c}
+                    src={`/cards/${allLocations[c - 1]}.png`}
+                    alt={`Option ${c}`}
+                    className={`w-20 h-auto rounded cursor-pointer ${
+                      selectedCardIds.includes(c) ? 'border-4 border-yellow-400' : ''
+                    }`}
+                    onClick={() => toggleSelectCard(c)}
+                  />
+                ))}
+              </div>
+            )
           )}
+
 
           {selectedCard === 5 && (
             <div className="flex flex-wrap gap-3 mb-4">

@@ -1,0 +1,55 @@
+# 🪐 Not Alone - Online Multiplayer Board Game
+
+A web adaptation of the board game *Not Alone*, built with React, TypeScript, and AWS. Supports both **single-player (vs AI)** and **real-time multiplayer** modes.
+
+This is a side project I built over the course of a month to explore:
+- Real-time multiplayer logic with WebSockets
+- Serverless backend infrastructure
+- Scalable game state management
+
+> 🚧 The game is still in development. Some cards and features are not fully implemented yet, and the UI is in a rough early stage. Feedback welcome!
+
+---
+
+## 🎮 Features
+
+### ✅ Implemented
+- Turn-based card game engine
+- Single-player mode with basic AI opponent
+- Multiplayer mode using WebSockets via AWS API Gateway
+- Real-time room joining and phase updates
+- Serverless backend using AWS Lambda and DynamoDB
+- Basic frontend using React + TypeScript
+- Automated deployment via GitHub Actions
+
+### 🔜 Coming Soon
+- Full Survivor/Monster card effect support
+- Game log & animations
+- Improved error handling
+
+---
+
+## 🧪 Try It Out
+
+Live Demo: [https://not-alone-board-game.vercel.app/]  
+GitHub Repo: [this repo]
+
+Play solo or share the link code with a friend to test multiplayer.
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+- React + TypeScript
+- Tailwind CSS (if used)
+- WebSocket client
+
+### Backend
+- AWS Lambda (Node.js)
+- Amazon DynamoDB
+- API Gateway WebSocket API
+
+### DevOps
+- GitHub Actions (CI/CD)
+- Vercel

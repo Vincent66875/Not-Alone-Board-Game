@@ -152,11 +152,13 @@ export function handleCatching(game: Game): Game {
 
       if (played === cardId) {
         switch (type) {
-          case 'c': // Creature
-            player.will = Math.max(0, player.will - 1);
+          case 'c':{ // Creature
+            const loss = (cardId === 1) ? 2 : 1; 
+            player.will = Math.max(0, player.will - loss);
             creatureTriggered = true;
-            updatedGame.state.history.push(`${player.name} was caught by the Creature and lost 1 Will.`);
+            updatedGame.state.history.push(`${player.name} was caught by the Creature at location ${cardId} and lost ${loss} Will.`);
             break;
+          }
 
           case 'a': // Assimilation
             if (player.hand.length > 0) {

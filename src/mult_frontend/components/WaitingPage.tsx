@@ -11,11 +11,10 @@ type Props = {
 export default function WaitingPage({ gameState, player, players }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
-  const playedCards = Array.isArray(player.playedCard)
-    ? player.playedCard
-    : player.playedCard !== undefined
-    ? [player.playedCard]
-    : [];
+  const playedCards = [
+    ...(player.playedCard !== undefined ? [player.playedCard] : []),
+    ...(player.playedCardAlt !== undefined ? [player.playedCardAlt] : []),
+  ];
 
 
   if (gameState.phase === 'planning') {
