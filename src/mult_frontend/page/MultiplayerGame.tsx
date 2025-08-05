@@ -137,8 +137,8 @@ export default function MultiplayerApp() {
     switch (latestMessage.type) {
       case 'roomUpdate':
         // console.log("debug message: roomUpdate, readyToStart:", latestMessage.readyToStart);
-        if (latestMessage.players) {
-          setPlayers(latestMessage.players);
+        if (latestMessage.game) {
+          updateFromGame(latestMessage.game);
         }
         if (latestMessage.readyToStart !== undefined) {
           setReadyToStart(latestMessage.readyToStart);

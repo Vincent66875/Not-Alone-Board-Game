@@ -86,17 +86,7 @@ async function handleJoinRoom(body, connectionId) {
 
     await broadcastToRoom(roomId, {
         type: 'roomUpdate',
-        players: game.players.map(p => ({
-            id: p.id,
-            name: p.name,
-            connectionId: p.connectionId,
-            hand: p.hand,
-            discard: p.discard,
-            isCreature: p.isCreature,
-            will: p.will,
-            survival: p.survival,
-            riverActive: p.riverActive,
-        })),
+        game,
         readyToStart: game.players.length >= 3,
     });
 
