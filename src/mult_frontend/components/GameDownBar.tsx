@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Player } from '../../mult_backend/gameEngine';
+import { allLocations } from '../../mult_backend/gameEngine';
 
 interface GameDownBarProps {
   players: Player[];
@@ -34,58 +35,57 @@ export default function GameDownBar({ players, player }: GameDownBarProps) {
           ))}
       </div>
 
-      <div className="fixed bottom-3 left-3 flex gap-3">
-      {/* Hand */}
-        <img
-          src="/icons/hand_icon.png"
-          onClick={() => setShowHand(prev => !prev)}
-          className={`w-12 h-auto cursor-pointer transition-all hover:scale-105 
-            ${player.hand.length === 0 ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
-          title="Hand"
-        />
-        {/* Discard */}
-        <img
-          src="/icons/discard_icon.png"
-          onClick={() => player.discard.length > 0 && setShowDiscard(prev => !prev)}
-          className={`w-12 h-auto cursor-pointer transition-all hover:scale-105 
-            ${player.discard.length === 0 ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
-          title="Discard"
-        />
-        {/* Survival */}
-        <img
-          src="/icons/survival_icon.png"
-          onClick={() => player.survival.length > 0 && setShowSurvival(prev => !prev)}
-          className={`w-12 h-auto cursor-pointer transition-all hover:scale-105 
-            ${player.survival.length === 0 ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
-          title="Survival Cards"
-        />
-      </div>
-      {/* Sliding Panel: Hand */}
+      {/* Deck Icons - now in bottom right */}
+        <div className="fixed bottom-3 right-3 flex gap-3 z-20">
+          {/* Hand */}
+          <img
+            src="/background/card_deck.jpg"
+            onClick={() => setShowHand(prev => !prev)}
+            className={`w-12 h-auto cursor-pointer transition-all hover:scale-105 
+              ${player.hand.length === 0 ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+            title="Hand"
+          />
+          {/* Discard */}
+          <img
+            src="background/card_deck.jpg"
+            onClick={() => player.discard.length > 0 && setShowDiscard(prev => !prev)}
+            className={`w-12 h-auto cursor-pointer transition-all hover:scale-105 
+              ${player.discard.length === 0 ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+            title="Discard"
+          />
+          {/* Survival */}
+          <img
+            src="background/survive_deck.jpg"
+            onClick={() => player.survival.length > 0 && setShowSurvival(prev => !prev)}
+            className={`w-12 h-auto cursor-pointer transition-all hover:scale-105 
+              ${player.survival.length === 0 ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+            title="Survival Cards"
+          />
+        </div>
+
+        {/* Slide-Out Panels - stacked above icons */}
         {showHand && (
-          <div className="fixed bottom-20 left-3 bg-black bg-opacity-70 p-3 rounded-lg flex gap-2 shadow-xl">
+          <div className="fixed bottom-[6.5rem] right-3 bg-black bg-opacity-70 p-3 rounded-lg flex gap-2 shadow-xl z-10">
             {player.hand.map((cardId, idx) => (
-              <img key={idx} src={`/cards/location_card_${cardId}.png`} className="w-20 h-auto rounded" />
+              <img key={idx} src={`/cards/${allLocations[cardId-1]}.png`} className="w-20 h-auto rounded" />
             ))}
           </div>
         )}
-
-        {/* Sliding Panel: Discard */}
         {showDiscard && (
-          <div className="fixed bottom-20 left-3 bg-black bg-opacity-70 p-3 rounded-lg flex gap-2 shadow-xl">
+          <div className="fixed bottom-[6.5rem] right-3 bg-black bg-opacity-70 p-3 rounded-lg flex gap-2 shadow-xl z-10">
             {player.discard.map((cardId, idx) => (
-              <img key={idx} src={`/cards/location_card_${cardId}.png`} className="w-20 h-auto rounded opacity-70" />
+              <img key={idx} src={`/cards/${allLocations[cardId-1]}.png`} className="w-20 h-auto rounded opacity-70" />
             ))}
           </div>
         )}
-
-        {/* Survival already handled in your code, can re-use toggle: */}
         {showSurvival && (
-          <div className="fixed bottom-20 right-3 flex gap-2 bg-black bg-opacity-70 p-2 rounded-lg shadow-lg">
+          <div className="fixed bottom-[6.5rem] right-3 flex gap-2 bg-black bg-opacity-70 p-2 rounded-lg shadow-lg z-10">
             {player.survival.map((cardId, idx) => (
               <img key={idx} src={`/cards/survival_card_${cardId}.png`} className="w-16 h-auto rounded" />
             ))}
           </div>
         )}
+
     </>
   );
 }
