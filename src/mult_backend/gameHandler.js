@@ -14,7 +14,6 @@ const { startGame,
   handleCatching, 
   handleReset, 
   handleWill,
-  shouldAutoResolve,
 } = require('./gameEngine');
 
 exports.handler = async (event) => {
@@ -405,6 +404,8 @@ async function handleActivate(body, connectionId) {
     .every(p => p.hasActivated);
 
   await saveGame(checkedGame);
+  const gameEnded = await checkGameOver(game, roomId);
+  if (gameEnded) return;
 
   if (allActivated) {
     checkedGame.state.phase = 'ended';
@@ -439,6 +440,9 @@ async function handleEndTurn(body, connectionId) {
   const updatedGame = handleReset(game);
 
   await saveGame(updatedGame);
+
+  const gameEnded = await checkGameOver(game, roomId);
+  if (gameEnded) return;
 
   await broadcastToRoom(roomId, {
     type: 'turnComplete',
@@ -556,4 +560,30 @@ async function debugBroadcast(roomId, message) {
     type: 'debug',
     message,
   });
+}
+async function checkGameOver(game, roomId) {
+  const rescue = game.state.board.rescue;
+  const assimilation = game.state.board.assimilation;
+
+  if (rescue >= 15) {
+    game.state.phase = 'ended';
+    game.state.winner = 'human';
+    await broadcastToRoom(roomId, {
+      type: 'gameOver',
+      game,
+    });
+    return true;
+  }
+
+  if (assimilation >= 9) {
+    game.state.phase = 'ended';
+    game.state.winner = 'alien';
+    await broadcastToRoom(roomId, {
+      type: 'gameOver',
+      game,
+    });
+    return true;
+  }
+
+  return false;
 }

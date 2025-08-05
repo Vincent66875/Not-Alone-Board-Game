@@ -7,6 +7,7 @@ import PlanningPhase from '../components/PlanningPhase';
 import RiverChoicePhase from '../components/RiverChoicePhase';
 import ResolutionPhase from '../components/ResolutionPhase';
 import EndingPage from '../components/EndingPhase';
+import GameOverPage from '../components/GameOverPage';
 import GameTopBar from '../components/GameTopBar';
 import GameDownBar from '../components/GameDownBar';
 import { useWebSocket } from '../hooks/useWebsocket';
@@ -18,7 +19,7 @@ export default function MultiplayerApp() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [stage, setStage] = useState<'join' | 'lobby' | 'game' >('join');
+  const [stage, setStage] = useState<'join' | 'lobby' | 'game' | 'gameOver' >('join');
   const [readyToStart, setReadyToStart] = useState<boolean>(false);
 
   const { sendMessage, messages, connected } = useWebSocket('wss://8w1e1yzd10.execute-api.us-east-2.amazonaws.com/production/');
@@ -168,7 +169,13 @@ export default function MultiplayerApp() {
           updateFromGame(latestMessage.game);
         }
         break;
-
+      
+      case 'gameOver':
+        if (latestMessage.game?.state && latestMessage.game?.players) {
+          updateFromGame(latestMessage.game);
+        }
+        setStage('gameOver');
+        break;
       default:
         break;
     }
@@ -194,6 +201,13 @@ export default function MultiplayerApp() {
             console.log('Sending LeaveGame message');
             handleLeaveGame();
           }}
+        />
+      )}
+
+      {stage === 'gameOver' && roomId && gameState?.winner && (
+        <GameOverPage
+          winner={gameState.winner}
+          players={players}
         />
       )}
 

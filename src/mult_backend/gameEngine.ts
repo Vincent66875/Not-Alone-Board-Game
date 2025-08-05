@@ -61,6 +61,7 @@ export interface GameState {
   };
   huntedLocations?: HuntedLocation[];
   remainingTokens: number;
+  winner?: 'alien' | 'human';
 }
 
 export type Player = {
@@ -94,7 +95,7 @@ export function initializeGame(roomId: string, players: Player[]): Game {
     remainingTokens: 1,
     board: {
       player_num: players.length,
-      rescue: 0,
+      rescue: 14,
       assimilation: 0,
       beachMarker: false,
     },
@@ -399,15 +400,6 @@ export function handleActivateCard(
 
 export function handleReset(game: Game): Game {
   const updatedGame = { ...game };
-
-  // Check for game end condition before resetting
-  if (updatedGame.state.board.assimilation >= 10 || updatedGame.state.board.rescue >= 10) {
-    updatedGame.state.phase = 'ended';
-    updatedGame.state.history.push(
-      `Game ended. ${updatedGame.state.board.assimilation >= 10 ? 'Creature' : 'Survivors'} win.`
-    );
-    return updatedGame;
-  }
 
   // Clear phase and increment turn
   updatedGame.state.phase = 'planning';
